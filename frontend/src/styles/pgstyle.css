@@ -1,0 +1,170 @@
+/* Container Layout */
+.pg-container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Header Styles */
+.back-btn {
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-bottom: 10px;
+  padding: 0;
+  font-weight: 500;
+}
+
+.pg-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.pg-location {
+  color: #4b5563;
+  font-size: 1rem;
+  margin-bottom: 24px;
+}
+
+/* 1+4 Image Gallery Grid */
+.pg-gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  height: 450px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.main-img-box img, .side-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s;
+}
+
+.main-img-box img:hover, .side-img-box img:hover {
+  opacity: 0.9;
+}
+
+.side-imgs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Two-Column Layout */
+.pg-content-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 80px;
+  margin-top: 48px;
+}
+
+.info-section {
+  padding: 32px 0;
+}
+
+.info-section h3 {
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+/* Amenities Icons */
+.amenities-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.amenity-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #1e3a8a;
+  border-radius: 50%;
+}
+
+/* Sticky Booking Card */
+.pg-sidebar {
+  position: relative;
+}
+
+.booking-card {
+  position: sticky;
+  top: 100px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  background: white;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.unit {
+  font-size: 1rem;
+  color: #717171;
+  font-weight: 400;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.status-badge.available { background: #dcfce7; color: #166534; }
+.status-badge.full { background: #fee2e2; color: #991b1b; }
+
+.book-now-btn {
+  width: 100%;
+  background:  #1E3A8A; 
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.book-now-btn:hover { background: #132dbe; }
+.book-now-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+.card-footer {
+  text-align: center;
+  color: #717171;
+  font-size: 0.9rem;
+  margin-top: 12px;
+}
+.back-btn{
+  background:  #1E3A8A; 
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  width:100px;
+  text-decoration: none;
+  font-weight: 400;
+}
+.back-btn:hover{
+     background: #132dbe;
+}

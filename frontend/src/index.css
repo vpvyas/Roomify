@@ -1,0 +1,165 @@
+body {
+ font-family: Arial,  sans-serif,Helvetica,;
+}
+
+/* Navbar */
+.navbar {
+  background: #1E3A8A;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+}
+
+/* Main container */
+.mainnav {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #eef5ff;
+  font-family: Arial, sans-serif;
+}
+
+/* Search box container */
+.box2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Search input */
+.box2 input {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+  width: 300px;
+}
+
+/* Search button */
+.btnsearch {
+  padding: 8px 16px;
+  border-radius: 6px;
+  /*border: 1px solid #2563eb; */
+  background: white;
+  color: #2563eb;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Login button */
+.loginbtn {
+  margin-right: 10px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: white;
+  color: #2563eb;
+}
+
+/* Owner button */
+.ownerbtn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #1e40af;
+  color: white;
+}
+/* Logo */
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* Main content */
+.maincontent {
+  flex: 1;
+
+/*  padding: 30px;*/
+
+}
+
+/* Section title */
+.section-title {
+  color: #1e40af;
+  margin-bottom: 20px;
+}
+
+/* PG grid */
+.pg-grid {
+  display:flex;
+  justify-content: start;
+  margin:2rem;
+  padding: 2rem;
+  /**border:2px solid blueviolet;/
+  /*display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  /*gap: 20px;*/
+}
+
+/* PG card */
+.pg-card {
+  background: white;
+  border-radius: 12px;
+ /* border:2px solid green;*/
+  padding: 26px;
+  margin:20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: 0.3s;
+  height: 400px;
+  width:300px;
+}
+
+.pg-card:hover {
+  transform: translateY(-5px);
+}
+
+/* PG image placeholder */
+.pg-image {
+  height: 180px;
+  width:300px;
+  background: #dbeafe;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+/* PG price */
+.pg-price {
+  color: #2563eb;
+  font-weight: bold;
+  margin: 6px 0;
+}
+
+/* View button */
+.view-btn {
+  width: 100%;
+  padding: 8px;
+   background:#1E3A8A; 
+  color: white;
+  border: none;
+  margin-top:1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.view-btn:hover{
+  
+     background: #132dbe;
+}
+
+/* Footer */
+.footer {
+  background: #1e3a8a;
+  color: white;
+  text-align: center;
+  padding: 12px;
+}
+
+/* Search hover effect */
+.btnsearch:hover {
+  background: #1e40af;
+  color: white;
+}
