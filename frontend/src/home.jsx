@@ -8,7 +8,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:8080/pgs")
+    fetch("http://localhost:3000/pg/all")
       .then((res) => res.json())
       .then((data) => setPgListData(data))
       .catch((err) => console.log("Error fetching PGs:", err));

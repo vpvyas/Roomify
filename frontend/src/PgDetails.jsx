@@ -10,7 +10,7 @@ export default function PgDetails() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`http://localhost:8080/pgs/${id}`)
+    fetch(`http://localhost:3000/pg/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("PG not found");
         return res.json();
