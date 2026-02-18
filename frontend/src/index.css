@@ -1,165 +1,205 @@
-body {
- font-family: Arial,  sans-serif,Helvetica,;
+:root {
+  --primary-blue: #2563eb;
+  --text-dark: #1e293b;
+  --text-light: #64748b;
+  --bg-light: #f8fafc;
+  --white: #ffffff;
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
-/* Navbar */
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+}
+
+/* Navbar Improvements */
 .navbar {
-  background: #1E3A8A;
-  color: white;
+  background-color: var(--white);
+  padding: 1rem 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav-content {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 24px;
 }
 
-/* Main container */
-.mainnav {
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  background: #eef5ff;
-  font-family: Arial, sans-serif;
+.logo {
+  color: var(--primary-blue);
+  font-weight: 800;
+  font-size: 1.5rem;
+  cursor: pointer;
+  margin: 0;
 }
 
-/* Search box container */
-.box2 {
+/* Professional Search Bar */
+.search-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 4px 8px 4px 20px;
+  width: 40%;
+  border: 1px solid transparent;
+  transition: all 0.2s;
 }
 
-/* Search input */
-.box2 input {
-  padding: 8px 12px;
-  border-radius: 6px;
+.search-container:focus-within {
+  background: var(--white);
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-input {
   border: none;
+  background: transparent;
+  width: 100%;
+  padding: 8px 0;
   outline: none;
-  width: 300px;
+  font-size: 0.95rem;
 }
 
-/* Search button */
-.btnsearch {
-  padding: 8px 16px;
-  border-radius: 6px;
-  /*border: 1px solid #2563eb; */
-  background: white;
-  color: #2563eb;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-/* Login button */
-.loginbtn {
-  margin-right: 10px;
-  padding: 8px 14px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  background: white;
-  color: #2563eb;
-}
-
-/* Owner button */
-.ownerbtn {
-  padding: 8px 14px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  background: #1e40af;
+.search-icon-btn {
+  background: var(--primary-blue);
   color: white;
-}
-/* Logo */
-.logo {
-  font-size: 22px;
-  font-weight: bold;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
-/* Main content */
+/* Buttons Hierarchy */
+.loginbtn-link {
+  background: transparent;
+  border: none;
+  color: var(--text-dark);
+  font-weight: 600;
+  margin-right: 20px;
+  cursor: pointer;
+}
+
+.ownerbtn-primary {
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.ownerbtn-primary:hover {
+  opacity: 0.9;
+}
+
+/* Hero Section */
+.hero {
+  text-align: center;
+  padding: 60px 20px;
+  background: linear-gradient(to bottom, #ffffff, #f8fafc);
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  color: var(--text-light);
+  font-size: 1.1rem;
+}
+
+/* PG Grid & Cards */
 .maincontent {
-  flex: 1;
-
-/*  padding: 30px;*/
-
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-/* Section title */
-.section-title {
-  color: #1e40af;
-  margin-bottom: 20px;
-}
-
-/* PG grid */
 .pg-grid {
-  display:flex;
-  justify-content: start;
-  margin:2rem;
-  padding: 2rem;
-  /**border:2px solid blueviolet;/
-  /*display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  /*gap: 20px;*/
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 30px;
 }
 
-/* PG card */
 .pg-card {
-  background: white;
+  background: var(--white);
   border-radius: 12px;
- /* border:2px solid green;*/
-  padding: 26px;
-  margin:20px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  transition: 0.3s;
-  height: 400px;
-  width:300px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s;
 }
 
 .pg-card:hover {
   transform: translateY(-5px);
 }
 
-/* PG image placeholder */
+.image-container {
+  height: 200px;
+  overflow: hidden;
+}
+
 .pg-image {
-  height: 180px;
-  width:300px;
-  background: #dbeafe;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-/* PG price */
+.card-info {
+  padding: 16px;
+}
+
+.card-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.2rem;
+}
+
+.city-label {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.price-row {
+  margin-bottom: 16px;
+}
+
 .pg-price {
-  color: #2563eb;
-  font-weight: bold;
-  margin: 6px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-blue);
 }
 
-/* View button */
+.per-month {
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+
 .view-btn {
   width: 100%;
-  padding: 8px;
-   background:#1E3A8A; 
-  color: white;
-  border: none;
-  margin-top:1rem;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
-}
-.view-btn:hover{
-  
-     background: #132dbe;
+  transition: background 0.2s;
 }
 
-/* Footer */
-.footer {
-  background: #1e3a8a;
-  color: white;
-  text-align: center;
-  padding: 12px;
-}
-
-/* Search hover effect */
-.btnsearch:hover {
-  background: #1e40af;
-  color: white;
+.view-btn:hover {
+  background: #f1f5f9;
 }

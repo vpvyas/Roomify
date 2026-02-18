@@ -4,11 +4,13 @@ import PgDetails from "./PgDetails";
 
 export default function App() {
   return (
+    <div className="container">
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/pg/:id" element={<PgDetails />} />
       </Routes>
     </Router>
+    </div>
   );
 }

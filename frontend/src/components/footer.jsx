@@ -1,5 +1,6 @@
 import React from "react";
-import "../styles/footer.css"
+import "../styles/footer.css";
+
 function Footer() {
   return (
     <footer className="footer">
@@ -35,22 +36,18 @@ function Footer() {
         </div>
       </div>
 
-{/* Middle Section */}
-<div className="footer-middle">
-  <div className="footer-container footer-middle-content">
-    <h2>Roomify</h2>
-    <button className="footer-btn">English</button>
-    <button className="footer-btn">India</button>
-  </div>
-</div>
+      {/* Middle Section */}
+      <div className="footer-middle">
+        <h2>Roomify</h2>
+        <button className="footer-btn">English</button>
+        <button className="footer-btn">India</button>
+      </div>
 
-{/* Bottom Section */}
-<div className="footer-bottom">
-  <div className="footer-container footer-bottom-content">
-    <p>Conditions of Use & Sale | Privacy Notice</p>
-    <p>© {new Date().getFullYear()} Roomify. All rights reserved.</p>
-  </div>
-</div>
+      {/* Bottom Section */}
+      <div className="footer-bottom">
+        <p>Conditions of Use & Sale | Privacy Notice</p>
+        <p>© {new Date().getFullYear()} Roomify. All rights reserved.</p>
+      </div>
 
     </footer>
   );
