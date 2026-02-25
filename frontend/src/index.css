@@ -203,3 +203,89 @@ body {
 .view-btn:hover {
   background: #f1f5f9;
 }
+/* Modal Overlay */
+.login-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.6); /* Semi-transparent dark blue-gray */
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+/* Modal Content Box */
+.login-box {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.login-box h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.5rem;
+  color: #1e293b;
+}
+
+.login-box p {
+  color: #64748b;
+  margin-bottom: 30px;
+  font-size: 0.95rem;
+}
+
+/* Option Buttons */
+.login-option {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.login-option.user {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.login-option.user:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.login-option.owner {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.login-option.owner:hover {
+  background: #1d4ed8;
+}
+
+/* Close/Cancel Link */
+.close-btn {
+  margin-top: 15px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #ef4444; /* Turns red on hover */
+}
