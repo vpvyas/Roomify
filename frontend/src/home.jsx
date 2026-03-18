@@ -2,18 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./index.css";
 import Footer from "./components/footer";
-import Header from "./components/header"
+import Header from "./components/header";
+
 export default function Home() {
   const [search, setSearch] = useState("");
   const [pgListData, setPgListData] = useState([]);
-  
-  // FIX: Added the missing state for the login modal
   const [showLoginOptions, setShowLoginOptions] = useState(false);
-  
   const navigate = useNavigate();
 
+  const backendUrl = "http://localhost:3000"; // Used for API calls, not images anymore
+
   useEffect(() => {
-    fetch("http://localhost:3000/pg/all")
+    fetch(`${backendUrl}/pg/all`)
       .then((res) => res.json())
       .then((data) => setPgListData(data))
       .catch((err) => console.log("Error fetching PGs:", err));
@@ -27,14 +27,12 @@ export default function Home() {
 
   return (
     <div className="app-container">
-      {/* Navbar */}
-     <Header
-  search={search}
-  setSearch={setSearch}
-  showLoginOptions={showLoginOptions}
-  setShowLoginOptions={setShowLoginOptions}
-/>
-
+      <Header
+        search={search}
+        setSearch={setSearch}
+        showLoginOptions={showLoginOptions}
+        setShowLoginOptions={setShowLoginOptions}
+      />
 
       <main className="maincontent">
         <header className="hero">
@@ -50,9 +48,19 @@ export default function Home() {
                 <div key={pg._id} className="pg-card">
                   <div className="image-container">
                     <img
-                      src={pg.images?.length ? pg.images[0] : "/no-image.png"}
+                      /* RECTIFIED: 
+                         1. We check if images[0] exists.
+                         2. We access .url because it's now an object.
+                         3. We DON'T prefix with backendUrl because Cloudinary is external.
+                      */
+                      src={
+                        pg.images && pg.images.length > 0 
+                          ? pg.images[0].url 
+                          : "/no-image.png"
+                      }
                       alt={pg.name}
                       className="pg-image"
+                      onError={(e) => { e.target.src = "/no-image.png"; }}
                     />
                   </div>
                   <div className="card-info">

@@ -42,7 +42,7 @@ function Login() {
         if (response.data.user.role === "owner") {
           navigate("/owner-dashboard");
         } else {
-          navigate("/");
+          navigate("/user-dashboard");
         }
       }, 1000);
 

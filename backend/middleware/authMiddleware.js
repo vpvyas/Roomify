@@ -4,28 +4,23 @@ const User = require("../models/User");
 const protect = async (req, res, next) => {
   let token;
 
-  // Check Authorization header
   if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     try {
-      // Get token from "Bearer TOKEN"
       token = req.headers.authorization.split(" ")[1];
+      console.log("Token received:", token); // DEBUG LINE
 
       const secret = process.env.JWT_SECRET || "my_secret_key_123";
       const decoded = jwt.verify(token, secret);
 
-      // Attach user to request (optional but best practice)
       req.user = await User.findById(decoded.id).select("-password");
-
       next();
     } catch (error) {
-      console.log("JWT ERROR:", error);
-      return res.status(401).json({ message: "Token invalid" });
+      console.error("JWT VERIFICATION ERROR:", error.message); // Will show 'jwt expired' or 'invalid signature'
+      return res.status(401).json({ message: "Token invalid: " + error.message });
     }
-  }
-
-  if (!token) {
-    return res.status(401).json({ message: "Not authorized, no token" });
+  } else {
+      return res.status(401).json({ message: "Not authorized, no token found in headers" });
   }
 };
 
-module.exports = protect;
+module.exports = protect; // Exporting the function directly

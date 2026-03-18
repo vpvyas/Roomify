@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import "../styles/addRoom.css";
+import { useNavigate } from "react-router-dom";
+import "../styles/editPG.css"; // Using the style you provided
 
-function AddPG({ isOpen, onClose, onRefresh }) {
+function AddPG() {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   
   const [formData, setFormData] = useState({
@@ -15,57 +17,62 @@ function AddPG({ isOpen, onClose, onRefresh }) {
     totalRooms: "",
     amenities: "",
     rules: "",
-    imageLink: "",
   });
 
-  if (!isOpen) return null;
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = (e) => {
+    // RECTIFIED: Capture all files as an array for multiple upload
+    setSelectedFiles(Array.from(e.target.files));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // RECTIFIED: Check for both _id and id
     const ownerId = user?._id || user?.id;
 
     if (!ownerId) {
-      alert("Session expired. Please log in again to list a property.");
+      alert("Session expired. Please log in again.");
       return;
     }
 
-    const pgData = {
-      name: formData.name,
-      description: formData.description,
-      address: {
-        city: formData.city,
-        state: formData.state,
-        location: formData.location
-      },
-      // Converters to match Schema expectations
-      amenities: formData.amenities ? formData.amenities.split(",").map(item => item.trim()) : [],
-      rules: formData.rules ? formData.rules.split(",").map(item => item.trim()) : [],
-      price: Number(formData.price),
-      availableRooms: Number(formData.availableRooms),
-      totalRooms: Number(formData.totalRooms),
-      images: [formData.imageLink],
-      ownerId: ownerId // This is what the backend route expects
-    };
+    const data = new FormData();
+    data.append("name", formData.name);
+    data.append("description", formData.description);
+    data.append("city", formData.city);
+    data.append("state", formData.state);
+    data.append("location", formData.location);
+    data.append("price", formData.price);
+    data.append("totalRooms", formData.totalRooms);
+    data.append("availableRooms", formData.availableRooms);
+    data.append("ownerId", ownerId);
+
+    // RECTIFIED: Formatting amenities and rules as JSON strings for the backend
+    const amenitiesArr = formData.amenities ? formData.amenities.split(",").map(i => i.trim()) : [];
+    const rulesArr = formData.rules ? formData.rules.split(",").map(i => i.trim()) : [];
+    data.append("amenities", JSON.stringify(amenitiesArr));
+    data.append("rules", JSON.stringify(rulesArr));
+
+    // RECTIFIED: Appending each file to the 'images' key
+    for (let i = 0; i < selectedFiles.length; i++) {
+      data.append("images", selectedFiles[i]);
+    }
 
     try {
       const response = await fetch("http://localhost:3000/pg/add", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(pgData),
+        body: data,
+        // Headers are automatically set to multipart/form-data by fetch when sending FormData
       });
 
-      const result = await response.json();
       if (response.ok) {
         alert("Success! Your PG is now listed.");
-        onRefresh(); 
-        onClose();   
+        navigate("/owner-dashboard");
       } else {
+        const result = await response.json();
         alert("Error: " + result.message);
       }
     } catch (error) {
@@ -75,35 +82,132 @@ function AddPG({ isOpen, onClose, onRefresh }) {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="form-container modal-content">
-        <div className="modal-header">
-          <h2>List Your Property</h2>
-          <button className="close-x" onClick={onClose}>&times;</button>
-        </div>
-        <form onSubmit={handleSubmit} className="professional-form">
-          <input name="name" placeholder="PG Name" onChange={handleChange} required />
-          <textarea name="description" placeholder="Description" onChange={handleChange} required />
-          
-          <div className="row">
-            <input name="city" placeholder="City" onChange={handleChange} required />
-            <input name="state" placeholder="State" onChange={handleChange} required />
+    <div className="edit-container">
+      <div className="edit-card">
+        <header className="edit-header">
+          <h1>List Your Property</h1>
+          <p>Fill in the details below to add your PG to Roomify.</p>
+        </header>
+
+        <form onSubmit={handleSubmit} className="edit-form">
+          {/* Section 1: Basic Information */}
+          <div className="form-section">
+            <h3><span className="step-num">1</span> Basic Details</h3>
+            <div className="input-group">
+              <label>PG Name</label>
+              <input 
+                name="name" 
+                placeholder="e.g. Sunshine Luxury Stays" 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
+            <div className="input-group">
+              <label>Description</label>
+              <textarea 
+                name="description" 
+                rows="4" 
+                placeholder="Describe your PG, amenities, and surroundings..." 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
           </div>
-          <input name="location" placeholder="Full Address / Landmark" onChange={handleChange} required />
 
-          <div className="row">
-            <input name="price" type="number" placeholder="Monthly Rent" onChange={handleChange} required />
-            <input name="totalRooms" type="number" placeholder="Total Rooms" onChange={handleChange} required />
-            <input name="availableRooms" type="number" placeholder="Available Rooms" onChange={handleChange} required />
+          {/* Section 2: Location Details */}
+          <div className="form-section">
+            <h3><span className="step-num">2</span> Location Info</h3>
+            <div className="form-row">
+              <div className="input-group">
+                <label>City</label>
+                <input name="city" placeholder="City" onChange={handleChange} required />
+              </div>
+              <div className="input-group">
+                <label>State</label>
+                <input name="state" placeholder="State" onChange={handleChange} required />
+              </div>
+            </div>
+            <div className="input-group">
+              <label>Full Address / Landmark</label>
+              <input 
+                name="location" 
+                placeholder="Street address, colony, or landmark" 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
           </div>
 
-          <input name="amenities" placeholder="Amenities (Wifi, AC, Food...)" onChange={handleChange} />
-          <input name="rules" placeholder="Rules (No Smoking, Timing...)" onChange={handleChange} />
-          <input name="imageLink" placeholder="Image URL" onChange={handleChange} required />
+          {/* Section 3: Pricing & Capacity */}
+          <div className="form-section">
+            <h3><span className="step-num">3</span> Pricing & Rooms</h3>
+            <div className="form-row three-col">
+              <div className="input-group">
+                <label>Monthly Rent (₹)</label>
+                <input name="price" type="number" placeholder="Rent" onChange={handleChange} required />
+              </div>
+              <div className="input-group">
+                <label>Total Rooms</label>
+                <input name="totalRooms" type="number" placeholder="Total" onChange={handleChange} required />
+              </div>
+              <div className="input-group">
+                <label>Available Rooms</label>
+                <input name="availableRooms" type="number" placeholder="Available" onChange={handleChange} required />
+              </div>
+            </div>
+          </div>
 
-          <div className="btn-group">
-            <button type="button" className="back-btn" onClick={onClose}>Cancel</button>
-            <button type="submit" className="submit-btn">Add Property</button>
+          {/* Section 4: Additional Information */}
+          <div className="form-section">
+            <h3><span className="step-num">4</span> Rules & Amenities</h3>
+            <div className="input-group">
+              <label>Amenities</label>
+              <input 
+                name="amenities" 
+                placeholder="Wifi, AC, Food, Laundry (comma separated)" 
+                onChange={handleChange} 
+              />
+            </div>
+            <div className="input-group">
+              <label>Rules</label>
+              <input 
+                name="rules" 
+                placeholder="No Smoking, 10 PM Entry (comma separated)" 
+                onChange={handleChange} 
+              />
+            </div>
+          </div>
+
+          {/* Section 5: Media Upload */}
+          <div className="form-section media-upload">
+            <h3><span className="step-num">5</span> Property Images</h3>
+            <label className="file-label">
+              <span className="upload-icon">📸</span>
+              <span>Click to upload property photos</span>
+              <input 
+                type="file" 
+                multiple 
+                accept="image/*" 
+                onChange={handleFileChange} 
+                required 
+                style={{ display: 'none' }} 
+              />
+              <small>{selectedFiles.length > 0 ? `${selectedFiles.length} files selected` : "Supported: JPG, PNG, WEBP"}</small>
+            </label>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="edit-actions">
+            <button 
+              type="button" 
+              className="cancel-btn" 
+              onClick={() => navigate("/owner-dashboard")}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="save-btn">
+              Add Property
+            </button>
           </div>
         </form>
       </div>

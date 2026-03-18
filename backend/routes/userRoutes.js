@@ -6,7 +6,6 @@ const protect = require("../middleware/authMiddleware");
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
-// Protected dashboard route
 router.get("/dashboard", protect, (req, res) => {
   res.json({ message: "Welcome dashboard", user: req.user });
 });
