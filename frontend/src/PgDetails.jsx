@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+// ✅ Added useLocation to the imports
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Rating } from 'react-simple-star-rating'; 
 import "./styles/pgstyle.css";
 
-// --- Detailed Request Form (Modal) ---
+// --- Sub-Component: Detailed Request Form ---
 const RequestForm = ({ pg, user, onClose, onFinish }) => {
   const [formData, setFormData] = useState({
-    fullName: user.name || "",
+    fullName: user?.name || "",
     phone: "",
-    email: user.email || "",
+    email: user?.email || "",
     occupation: "",
     moveInDate: "",
     stayDuration: "",
@@ -32,7 +33,7 @@ const RequestForm = ({ pg, user, onClose, onFinish }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success("Request and details sent successfully!");
+      toast.success("Request sent successfully!");
       onFinish(); 
     } catch (err) {
       toast.error(err.response?.data?.message || "Error sending request");
@@ -90,15 +91,18 @@ const RequestForm = ({ pg, user, onClose, onFinish }) => {
   );
 };
 
+// --- Main Component ---
 export default function PgDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  // ✅ Initialize location
+  const location = useLocation();
 
   const [pg, setPg] = useState(null);
   const [error, setError] = useState("");
   const [hasRequested, setHasRequested] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentImage, setCurrentImage] = useState(0);
   const [rating, setRating] = useState(0);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,15 +113,14 @@ export default function PgDetails() {
 
   const fetchPgData = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/pg/${id}`);
-      if (!res.ok) throw new Error("PG not found");
-      const data = await res.json();
-      setPg(data);
-    } catch (err) { setError(err.message); }
+      const res = await axios.get(`${BACKEND_URL}/pg/${id}`);
+      setPg(res.data);
+    } catch (err) {
+      setError("PG not found or server error");
+    }
   };
 
   useEffect(() => {
-    fetchPgData();
     const checkStatus = async () => {
       if (user && token) {
         try {
@@ -125,60 +128,68 @@ export default function PgDetails() {
             headers: { Authorization: `Bearer ${token}` }
           });
           setHasRequested(res.data.some(req => req.pgId?._id === id || req.pgId === id));
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error("Status check failed", err); }
       }
     };
+
+    fetchPgData();
     checkStatus();
-  }, [id]);
+  }, [id, user?.id, user?._id, token]);
 
-  const nextSlide = () => setCurrentIndex((prev) => (prev === pg.images.length - 1 ? 0 : prev + 1));
-  const prevSlide = () => setCurrentIndex((prev) => (prev === 0 ? pg.images.length - 1 : prev - 1));
+  if (error) return <div className="error-state"><h2>{error}</h2></div>;
+  if (!pg) return <div className="loading-state"><h2>Loading...</h2></div>;
 
+  const images = (pg.images?.length ? pg.images : [{ url: "/no-image.png" }]);
+
+  const nextImage = () => setCurrentImage((prev) => (prev + 1) % images.length);
+  const prevImage = () => setCurrentImage((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+
+  // ✅ Updated Review Redirect with Path State
   const handleReview = async (e) => {
     e.preventDefault();
-    if (!token) return toast.error("Login to review");
+    if (!user || !token) {
+      toast.error("Please login to leave a review");
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
     if (rating === 0) return toast.error("Select a rating");
     setIsSubmitting(true);
     try {
       await axios.post(`${BACKEND_URL}/pg/${id}/reviews`, { rating, message }, { headers: { Authorization: `Bearer ${token}` } });
       toast.success("Review Posted!");
       setRating(0); setMessage(""); fetchPgData();
-    } catch (err) { toast.error("Error posting review"); }
+    } catch (err) { toast.error("Error posting review"); } 
     finally { setIsSubmitting(false); }
   };
 
-  if (error) return <div className="error-state"><h2>{error}</h2></div>;
-  if (!pg) return <div className="loading-state"><h2>Loading...</h2></div>;
+  // ✅ Updated Reserve Redirect with Path State
+  const handleReserveClick = () => {
+    if (!user || !token) {
+      toast.error("Please login to reserve this PG");
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+    setShowForm(true);
+  };
 
   return (
     <div className="pg-container">
       <div className="pg-header">
         <h1 className="pg-title">{pg.name}</h1>
-        <p className="pg-location">📍 {pg.address?.location}, {pg.address?.city}</p>
+        <p className="pg-location">📍 {pg.address?.location || pg.location}, {pg.address?.city || ""}</p>
       </div>
 
-      {/* MODERN PROFESSIONAL SLIDER */}
-      <div className="pro-slider-container compact">
-        <div className="pro-slider-track" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
-          {pg.images.map((img, i) => (
-            <div className="pro-slide" key={i}>
-              <div className="image-overlay-shadow"></div>
-              <img src={img.url} alt="Room View" />
-            </div>
+      <div className="details-images">
+        <div className="main-image-container">
+          <img src={images[currentImage].url || images[currentImage]} alt="main" className="main-image" />
+          <button className="img-prev" onClick={prevImage}>‹</button>
+          <button className="img-next" onClick={nextImage}>›</button>
+        </div>
+        <div className="thumbnail-row">
+          {images.slice(0, 5).map((img, i) => (
+            <img key={i} src={img.url || img} alt={`thumb-${i}`} className={`thumb ${currentImage === i ? "active" : ""}`} onClick={() => setCurrentImage(i)} />
           ))}
         </div>
-        <button className="pro-nav-btn prev" onClick={prevSlide}>
-          <svg viewBox="0 0 32 32"><path d="m20 28-11.29-11.29c-.39-.39-.39-1.02 0-1.41l11.29-11.29" fill="none" stroke="#222" strokeWidth="3.5"/></svg>
-        </button>
-        <button className="pro-nav-btn next" onClick={nextSlide}>
-          <svg viewBox="0 0 32 32"><path d="m12 4 11.29 11.29c.39.39.39 1.02 0 1.41l-11.29 11.29" fill="none" stroke="#222" strokeWidth="3.5"/></svg>
-        </button>
-        <div className="pro-slider-pagination">
-          {pg.images.map((_, i) => (
-            <div key={i} className={`pro-dot ${currentIndex === i ? 'active' : ''}`} onClick={() => setCurrentIndex(i)} />
-          ))}
-        </div>
-        <div className="pro-image-count">{currentIndex + 1} / {pg.images.length}</div>
       </div>
 
       <div className="pg-content-layout">
@@ -199,13 +210,25 @@ export default function PgDetails() {
           </section>
           <hr />
           <section className="info-section">
+            <h3>House Rules</h3>
+            {pg.rules?.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                {pg.rules.map((rule, i) => (
+                  <div key={i} style={{ fontSize: '0.95rem', color: '#475569', display: 'flex', alignItems: 'start', gap: '8px' }}>
+                    <span style={{ color: '#ef4444' }}>•</span> {rule}
+                  </div>
+                ))}
+              </div>
+            ) : <p className="description-text">No specific house rules listed.</p>}
+          </section>
+          <hr />
+          <section className="info-section">
             <h3>Amenities</h3>
             <div className="amenity-grid">
               {pg.amenities?.map((a, i) => (<div key={i} className="amenity-item"><span className="dot"></span> {a}</div>))}
             </div>
           </section>
 
-          {/* REVIEWS SECTION */}
           <section className="info-section reviews-section">
             <div className="reviews-header">
               <h3>Reviews ({pg.reviews?.length || 0})</h3>
@@ -220,14 +243,11 @@ export default function PgDetails() {
                 </div>
               ))}
             </div>
-            {/* Stylish Review Form */}
             <div className="review-form-card">
               <h4>Leave a review</h4>
               <Rating onClick={setRating} initialValue={rating} size={30} fillColor="#FFD700" transition />
               <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="How was your stay?" />
-              <button onClick={handleReview} disabled={isSubmitting} className="btn-post-review">
-                {isSubmitting ? "Posting..." : "Post Review"}
-              </button>
+              <button onClick={handleReview} disabled={isSubmitting} className="btn-post-review">{isSubmitting ? "Posting..." : "Post Review"}</button>
             </div>
           </section>
         </div>
@@ -238,7 +258,7 @@ export default function PgDetails() {
               <h3>₹{pg.price} <span className="unit">/ month</span></h3>
               <span className={`status-badge ${pg.availableRooms > 0 ? "available" : "full"}`}>{pg.availableRooms > 0 ? "Available" : "Full"}</span>
             </div>
-            <button className="btn-primary-blue-large" onClick={() => setShowForm(true)} disabled={pg.availableRooms <= 0 || hasRequested}>
+            <button className="btn-primary-blue-large" onClick={handleReserveClick} disabled={pg.availableRooms <= 0 || hasRequested}>
               {hasRequested ? "Request Sent ✅" : "Reserve Now"}
             </button>
           </div>

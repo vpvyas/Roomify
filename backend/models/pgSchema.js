@@ -12,7 +12,7 @@ const pgSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   availableRooms: { type: Number, required: true },
   totalRooms: { type: Number, required: true },
-  images: [{ url: String, path: String }],
+  images: [{ url: String, filename: String }],
   rules: [{ type: String }],
   owner: { 
     type: mongoose.Schema.Types.ObjectId, 

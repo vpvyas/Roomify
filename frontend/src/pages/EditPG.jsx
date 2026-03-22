@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast"; // Using toast for consistency
+import axios from "axios"; // 1. Import axios
 import "../styles/editPG.css"; 
 
 function EditPG() {
@@ -24,9 +26,10 @@ function EditPG() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${backendUrl}/pg/${id}`)
-      .then((res) => res.json())
-      .then((data) => {
+    // 2. Converted to Axios GET
+    axios.get(`${backendUrl}/pg/${id}`)
+      .then((res) => {
+        const data = res.data;
         setFormData({
           name: data.name,
           description: data.description,
@@ -36,7 +39,6 @@ function EditPG() {
           price: data.price,
           availableRooms: data.availableRooms,
           totalRooms: data.totalRooms,
-          // Joining arrays back into comma-separated strings for the form inputs
           amenities: Array.isArray(data.amenities) ? data.amenities.join(", ") : "",
           rules: Array.isArray(data.rules) ? data.rules.join(", ") : "",
         });
@@ -44,6 +46,7 @@ function EditPG() {
       })
       .catch((err) => {
         console.error("Error fetching PG:", err);
+        toast.error("Could not load property data");
         setLoading(false);
       });
   }, [id]);
@@ -53,7 +56,6 @@ function EditPG() {
   };
 
   const handleFileChange = (e) => {
-    // RECTIFIED: Convert FileList to Array to properly handle multiple uploads
     setSelectedFiles(Array.from(e.target.files));
   };
 
@@ -68,14 +70,12 @@ function EditPG() {
         }
     });
 
-    // RECTIFIED: Ensure amenities and rules are sent as JSON strings to match backend logic
     const amenitiesArray = formData.amenities ? formData.amenities.split(",").map(i => i.trim()) : [];
     const rulesArray = formData.rules ? formData.rules.split(",").map(i => i.trim()) : [];
     
     data.append("amenities", JSON.stringify(amenitiesArray));
     data.append("rules", JSON.stringify(rulesArray));
 
-    // RECTIFIED: Append multiple images to the 'images' key for Multer
     if (selectedFiles.length > 0) {
       for (let i = 0; i < selectedFiles.length; i++) {
         data.append("images", selectedFiles[i]);
@@ -83,22 +83,20 @@ function EditPG() {
     }
 
     try {
-      const response = await fetch(`${backendUrl}/pg/update/${id}`, {
-        method: "PUT",
-        body: data,
-        // Fetch automatically sets the correct Multipart header when 'body' is FormData
+      // 3. Converted to Axios PUT
+      // The interceptor in App.js will now automatically add the Authorization header!
+      const response = await axios.put(`${backendUrl}/pg/update/${id}`, data, {
+        headers: { "Content-Type": "multipart/form-data" }
       });
 
-      if (response.ok) {
-        alert("Property updated successfully! 🎉");
+      if (response.status === 200) {
+        toast.success("Property updated successfully! 🎉");
         navigate("/owner-dashboard");
-      } else {
-        const result = await response.json();
-        alert("Update failed: " + result.message);
       }
     } catch (error) {
       console.error("Submission error:", error);
-      alert("Could not connect to server.");
+      const errorMsg = error.response?.data?.message || "Update failed";
+      toast.error(errorMsg);
     }
   };
 
@@ -113,7 +111,6 @@ function EditPG() {
         </header>
 
         <form onSubmit={handleSubmit} className="edit-form">
-          {/* Section: Basic Info */}
           <section className="form-section">
             <h3><span className="step-num">1</span> Basic Information</h3>
             <div className="input-group">
@@ -126,7 +123,6 @@ function EditPG() {
             </div>
           </section>
 
-          {/* Section: Location */}
           <section className="form-section">
             <h3><span className="step-num">2</span> Location Details</h3>
             <div className="form-row">
@@ -145,7 +141,6 @@ function EditPG() {
             </div>
           </section>
 
-          {/* Section: Pricing & Availability */}
           <section className="form-section">
             <h3><span className="step-num">3</span> Pricing & Capacity</h3>
             <div className="form-row three-col">
@@ -164,7 +159,6 @@ function EditPG() {
             </div>
           </section>
 
-          {/* Section: Features */}
           <section className="form-section">
             <h3><span className="step-num">4</span> Features & Rules</h3>
             <div className="input-group">
@@ -177,7 +171,6 @@ function EditPG() {
             </div>
           </section>
 
-          {/* Section: Media */}
           <section className="form-section media-upload">
             <h3><span className="step-num">5</span> Media Update</h3>
             <label className="file-label">
@@ -188,7 +181,7 @@ function EditPG() {
                 multiple 
                 accept="image/*" 
                 onChange={handleFileChange} 
-                style={{ display: 'none' }} // Hidden to allow the label to act as the button
+                style={{ display: 'none' }} 
               />
               <small>
                 {selectedFiles.length > 0 

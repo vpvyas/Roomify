@@ -5,8 +5,14 @@ const path = require("path");
 const app = express();
 
 require('dotenv').config();
-const cors = require("cors");
-app.use(cors());
+const cors = require('cors');
+
+app.use(cors({
+  origin: 'http://localhost:5173', // or your frontend port
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'], // <--- THIS IS THE FIX
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.set("view engine", "ejs");

@@ -55,16 +55,19 @@ exports.getUserRequests = async (req, res) => {
 };
 
 // 3. GET OWNER REQUESTS: For owners like vishava to see incoming requests
+// Updated GET OWNER REQUESTS
 exports.getOwnerRequests = async (req, res) => {
   try {
     const { ownerId } = req.params;
 
-    // Populates PG details and the basic requester info (niti's name/email)
     const requests = await Request.find({ ownerId })
       .populate("pgId")
       .populate("userId", "name email"); 
 
-    res.json(requests);
+    // Filter out requests where pgId is null (just in case a PG was deleted)
+    const validRequests = requests.filter(req => req.pgId !== null);
+
+    res.json(validRequests);
 
   } catch (error) {
     res.status(500).json({

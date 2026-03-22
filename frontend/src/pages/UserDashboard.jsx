@@ -20,7 +20,7 @@ const ReceiptModal = ({ receipt, onClose }) => {
       html2canvas: { 
         scale: 4, 
         useCORS: true, 
-        backgroundColor: '#ffffff' // Forced white background for PDF
+        backgroundColor: '#ffffff' 
       },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
@@ -39,7 +39,6 @@ const ReceiptModal = ({ receipt, onClose }) => {
 
       <div className="receipt-modal-content" style={{ background: '#fff', maxWidth: '650px', width: '100%', borderRadius: '12px', position: 'relative', overflow: 'hidden' }}>
         
-        {/* Modal Toolbar: Blue with Red Close */}
         <div className="no-print" style={{ padding: '15px 25px', background: '#191970', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{fontWeight: 'bold'}}>Rent Receipt - {receipt.receipt_no}</span>
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -48,7 +47,6 @@ const ReceiptModal = ({ receipt, onClose }) => {
           </div>
         </div>
 
-        {/* Printable Area: White Background with Blue Borders */}
         <div id="printable-receipt" style={{ padding: '40px', background: '#ffffff', border: '2px solid #191970', margin: '20px', fontFamily: '"Courier New", Courier, monospace', color: '#1a1a1a' }}>
           <div style={{ textAlign: 'center', borderBottom: '2px solid #191970', marginBottom: '25px' }}>
             <h1 style={{ letterSpacing: '6px', margin: '0 0 10px 0', fontSize: '28px', color: '#191970' }}>RENT RECEIPT</h1>
@@ -78,7 +76,6 @@ const ReceiptModal = ({ receipt, onClose }) => {
             Rs. {receipt.total_amount}
           </div>
 
-          {/* Signature: Attached directly above text, no line */}
           <div style={{ marginTop: '60px', display: 'flex', justifyContent: 'flex-end' }}>
             <div style={{ width: '200px', textAlign: 'center', position: 'relative' }}>
               {receipt.signature && (
@@ -194,7 +191,8 @@ function UserDashboard() {
 
         {loading ? <div className="empty-state">Loading...</div> : (
           <div className="pg-grid-compact">
-            {requests.map((req) => (
+            {/* ADDED FILTER: req.pgId check ensures cards of deleted PGs don't show */}
+            {requests.filter(req => req.pgId).map((req) => (
               <div key={req._id} className="pg-card-compact" style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
                 <div className="card-img-container">
                   <img src={req.pgId?.images?.[0]?.url || "/no-image.png"} alt="PG" />
