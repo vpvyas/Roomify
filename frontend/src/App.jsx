@@ -15,12 +15,12 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/pg/update/:id" element={<EditPG />} />
         <Route path="/pg/:id" element={<PgDetails />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/user-dashboard" element={<UserDashboard />} />
          <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-         <Route path="/pg/update/:id" element={<EditPG />} />
         <Route path="pg/add" element={<AddPG/>}/>
       </Routes>
     </Router>

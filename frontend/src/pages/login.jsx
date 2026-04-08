@@ -35,13 +35,15 @@ function Login() {
       // Save credentials
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("role", response.data.user.role); 
 
       toast.success(`Welcome back, ${response.data.user.name}!`);
 
       // ✅ RECTIFIED REDIRECT LOGIC
       // 1. Check if user was redirected from a specific page (like a PG details page)
       // 2. If not, check their role and send them to the appropriate dashboard
-      const redirectTo = location.state?.from || (response.data.user.role === "owner" ? "/owner-dashboard" : "/user-dashboard");
+      const redirectTo = location.state?.from || 
+                         (response.data.user.role === "owner" ? "/owner-dashboard" : "/");
 
       setTimeout(() => {
         navigate(redirectTo, { replace: true });

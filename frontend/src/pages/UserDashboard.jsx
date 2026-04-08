@@ -5,95 +5,110 @@ import axios from "axios";
 import html2pdf from 'html2pdf.js';
 import "../styles/dashboard.css"; 
 
-// ==========================================
-// 1. RECEIPT MODAL: Blue Theme & White BG
-// ==========================================
+// ─── COMPONENT: RECEIPT MODAL (Blue & Professional) ─────────
 const ReceiptModal = ({ receipt, onClose }) => {
   if (!receipt) return null;
 
   const handleDownload = () => {
     const element = document.getElementById('printable-receipt');
     const options = {
-      margin: 0,
-      filename: `Receipt_${receipt.receipt_no}.pdf`,
-      image: { type: 'jpeg', quality: 1 },
+      margin: 0.2,
+      filename: `Roomify_Receipt_${receipt.receipt_no}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
-        scale: 4, 
+        scale: 2, 
         useCORS: true, 
-        backgroundColor: '#ffffff' 
+        backgroundColor: '#ffffff',
+        letterRendering: true
       },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
-
     html2pdf().set(options).from(element).save();
   };
 
+  // RECTIFIED: Helper to ensure charges show up even if saved differently
+  const getVal = (key) => receipt.charges?.[key] || 0;
+
   return (
-    <div className="receipt-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 5000, display: 'flex', justifyContent: 'center', alignItems: 'center', overflowY: 'auto', padding: '20px' }}>
+    <div className="receipt-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', zIndex: 5000, display: 'flex', justifyContent: 'center', alignItems: 'center', overflowY: 'auto', padding: '20px' }}>
       
+      {/* SVG Filter to sharpen the signature */}
       <svg style={{ position: 'absolute', width: 0, height: 0 }}>
         <filter id="remove-white">
           <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -1 -1 -1 1 0" />
         </filter>
       </svg>
 
-      <div className="receipt-modal-content" style={{ background: '#fff', maxWidth: '650px', width: '100%', borderRadius: '12px', position: 'relative', overflow: 'hidden' }}>
+      <div className="receipt-modal-content" style={{ background: '#fff', maxWidth: '650px', width: '100%', borderRadius: '15px', position: 'relative', overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.3)' }}>
         
-        <div className="no-print" style={{ padding: '15px 25px', background: '#191970', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{fontWeight: 'bold'}}>Rent Receipt - {receipt.receipt_no}</span>
+        {/* Top Control Bar */}
+        <div className="no-print" style={{ padding: '15px 25px', background: '#2563eb', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{fontWeight: '600'}}>Digital Rent Receipt</span>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button onClick={handleDownload} style={{ background: '#fff', color: '#2563eb', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>📥 Download PDF</button>
-            <button onClick={onClose} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Close</button>
+            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}>Close</button>
           </div>
         </div>
 
-        <div id="printable-receipt" style={{ padding: '40px', background: '#ffffff', border: '2px solid #191970', margin: '20px', fontFamily: '"Courier New", Courier, monospace', color: '#1a1a1a' }}>
-          <div style={{ textAlign: 'center', borderBottom: '2px solid #191970', marginBottom: '25px' }}>
-            <h1 style={{ letterSpacing: '6px', margin: '0 0 10px 0', fontSize: '28px', color: '#191970' }}>RENT RECEIPT</h1>
-          </div>
+        {/* The Actual Receipt Document */}
+        <div id="printable-receipt" style={{ padding: '40px', background: '#ffffff', margin: '0', color: '#1a1a1a', position: 'relative' }}>
           
-          <div style={{ marginBottom: '20px', fontSize: '18px' }}>
-            <strong>Owner:</strong> <span style={{borderBottom: '1px solid #333', display: 'inline-block', width: '80%'}}>{receipt.owner}</span>
-          </div>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-            <span><strong>Receipt No:</strong> {receipt.receipt_no}</span>
-            <span><strong>Dated:</strong> {new Date(receipt.date).toLocaleDateString()}</span>
-          </div>
+          {/* Subtle PAID Watermark */}
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-30deg)', fontSize: '120px', color: 'rgba(37, 99, 235, 0.05)', fontWeight: '900', zIndex: 0, pointerEvents: 'none' }}>PAID</div>
 
-          <p style={{ borderBottom: '1px dashed #999', paddingBottom: '10px', margin: '20px 0' }}>Received with thanks from: <strong>{receipt.tenant_name}</strong></p>
-          <p style={{ borderBottom: '1px dashed #999', paddingBottom: '10px', margin: '20px 0' }}>Address: {receipt.property_address}</p>
-          <p style={{ borderBottom: '1px dashed #999', paddingBottom: '10px', margin: '20px 0' }}>The sum of Rs: <strong>{receipt.total_amount}</strong></p>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ textAlign: 'center', borderBottom: '2px solid #2563eb', marginBottom: '30px', paddingBottom: '10px' }}>
+              <h1 style={{ letterSpacing: '4px', margin: '0', fontSize: '26px', color: '#2563eb', fontWeight: '900' }}>RENT RECEIPT</h1>
+            </div>
+            
+            <div style={{ marginBottom: '25px' }}>
+              <strong style={{color: '#666', fontSize: '12px', textTransform: 'uppercase'}}>Property Owner</strong> 
+              <div style={{borderBottom: '1px solid #eee', padding: '5px 0', fontSize: '18px', fontWeight: 'bold'}}>{receipt.owner}</div>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '25px', fontSize: '14px', background: '#f8fafc', padding: '12px', borderRadius: '8px' }}>
+              <span><strong>Receipt No:</strong> {receipt.receipt_no}</span>
+              <span><strong>Dated:</strong> {new Date(receipt.date).toLocaleDateString('en-IN')}</span>
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '25px', fontSize: '14px' }}>
-            <div>Monthly Rent: ₹{receipt.rent_amount}</div>
-            <div>Water Charges: ₹{receipt.charges?.water || 0}</div>
-            <div>Electricity: ₹{receipt.charges?.electricity || 0}</div>
-            <div>House Tax: ₹{receipt.charges?.tax || 0}</div>
-          </div>
+            <p style={{ borderBottom: '1px dashed #cbd5e1', padding: '12px 0', margin: '0' }}>Received with thanks from: <strong>{receipt.tenant_name}</strong></p>
+            <p style={{ borderBottom: '1px dashed #cbd5e1', padding: '12px 0', margin: '0' }}>For Property: <strong>{receipt.property_address}</strong></p>
 
-          <div style={{ marginTop: '35px', padding: '12px 25px', border: '3px solid #000', display: 'inline-block', fontSize: '26px', fontWeight: '900' }}>
-            Rs. {receipt.total_amount}
-          </div>
+            {/* RECTIFIED BREAKDOWN SECTION */}
+            <div style={{ marginTop: '30px', padding: '20px', background: '#f1f5f9', borderRadius: '10px' }}>
+              <h4 style={{margin: '0 0 15px 0', fontSize: '12px', textTransform: 'uppercase', color: '#475569', letterSpacing: '1px'}}>Payment Breakdown</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '15px' }}>
+                <div>Monthly Rent: <strong>₹{receipt.rent_amount}</strong></div>
+                <div>Water Charges: <strong>₹{getVal('water')}</strong></div>
+                <div>Electricity: <strong>₹{getVal('electricity')}</strong></div>
+                <div>House Tax/Misc: <strong>₹{getVal('tax')}</strong></div>
+              </div>
+            </div>
 
-          <div style={{ marginTop: '60px', display: 'flex', justifyContent: 'flex-end' }}>
-            <div style={{ width: '200px', textAlign: 'center', position: 'relative' }}>
-              {receipt.signature && (
-                <div style={{ height: '65px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: '5px' }}>
-                  <img 
-                    src={receipt.signature} 
-                    alt="Owner Signature" 
-                    crossOrigin="anonymous"
-                    style={{ 
-                      maxHeight: '100%', 
-                      maxWidth: '180px',
-                      filter: 'url(#remove-white) contrast(1.5)',
-                      mixBlendMode: 'multiply'
-                    }} 
-                  />
+            <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+              <div style={{ padding: '15px 30px', border: '3px solid #2563eb', color: '#2563eb', display: 'inline-block', fontSize: '24px', fontWeight: '900', borderRadius: '4px' }}>
+                TOTAL: ₹{receipt.total_amount}
+              </div>
+
+              <div style={{ width: '200px', textAlign: 'center' }}>
+                {receipt.signature && (
+                  <div style={{ height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img 
+                      src={receipt.signature} 
+                      alt="Owner Signature" 
+                      crossOrigin="anonymous"
+                      style={{ maxHeight: '100%', maxWidth: '100%', filter: 'contrast(1.2)', mixBlendMode: 'multiply' }} 
+                    />
+                  </div>
+                )}
+                <div style={{ borderTop: '2px solid #1a1a1a', paddingTop: '5px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                  Signature of Owner
                 </div>
-              )}
-              <strong style={{ borderTop: '1px solid #ddd', display: 'block', paddingTop: '5px' }}>Signature of Owner</strong>
+              </div>
+            </div>
+            
+            <div style={{marginTop: '60px', textAlign: 'center', color: '#94a3b8', fontSize: '10px', borderTop: '1px solid #f1f5f9', paddingTop: '20px'}}>
+              This is a digital receipt issued via Roomify India. Verified Payment.
             </div>
           </div>
         </div>
@@ -102,9 +117,7 @@ const ReceiptModal = ({ receipt, onClose }) => {
   );
 };
 
-// ==========================================
-// 2. DASHBOARD: Profile & Blue Theme
-// ==========================================
+// ─── MAIN COMPONENT: USER DASHBOARD ──────────────────────────
 function UserDashboard() {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -112,11 +125,7 @@ function UserDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
 
-  const [user] = useState(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-
+  const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -130,24 +139,27 @@ function UserDashboard() {
       } catch (err) { console.error(err); } finally { setLoading(false); }
     };
     fetchRequests();
-  }, [user, navigate, token]);
+  }, [navigate]);
 
   const fetchReceipt = async (requestId) => {
     try {
       const response = await axios.get(`http://localhost:3000/api/receipts/request/${requestId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSelectedReceipt(response.data);
-    } catch (err) { toast.error("Receipt not generated yet."); }
+      // Correctly handle both object or wrapped receipt keys
+      setSelectedReceipt(response.data.receipt || response.data);
+    } catch (err) { 
+      toast.error("Receipt not found. The owner may not have generated it yet."); 
+    }
   };
 
   const handleCancel = async (id) => {
-    if (!window.confirm("Are you sure you want to cancel?")) return;
+    if (!window.confirm("Cancel this request?")) return;
     try {
       await axios.delete(`http://localhost:3000/api/requests/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setRequests(requests.filter(r => r._id !== id));
+      setRequests(prev => prev.filter(r => r._id !== id));
       toast.success("Cancelled successfully");
     } catch (err) { toast.error("Failed to cancel"); }
   };
@@ -156,11 +168,11 @@ function UserDashboard() {
 
   return (
     <div className="dashboard-wrapper">
-      <nav className="dash-nav" style={{ borderBottom: '2px solid #e5e7eb' }}>
+      <nav className="dash-nav" style={{ sticky: 'top', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #eee' }}>
         <div className="nav-inner">
-          <div className="logo-text" onClick={() => navigate("/")} style={{cursor: 'pointer', color: '#2563eb', fontWeight: 'bold'}}>Roomify</div>
+          <div className="logo-text" onClick={() => navigate("/")} style={{cursor: 'pointer', color: '#2563eb', fontWeight: 'bold', fontSize: '22px'}}>Roomify</div>
           <div className="nav-profile-area">
-            <div className="avatar-trigger" onClick={() => setShowDropdown(!showDropdown)} style={{ background: '#2563eb' }}>
+            <div className="avatar-trigger" onClick={() => setShowDropdown(!showDropdown)} style={{ background: '#2563eb', cursor: 'pointer' }}>
               {user.name.charAt(0).toUpperCase()}
             </div>
             {showDropdown && (
@@ -174,8 +186,8 @@ function UserDashboard() {
                 </div>
                 <div className="dropdown-divider"></div>
                 <ul className="dropdown-list">
-                  <li onClick={() => navigate("/")}>Home / Explore</li>
-                  <li className="logout-action" style={{ color: '#ef4444' }} onClick={() => { localStorage.clear(); navigate("/"); }}>Logout</li>
+                  <li onClick={() => navigate("/")}>Home</li>
+                  <li className="logout-action" onClick={() => { localStorage.clear(); navigate("/"); }}>Logout</li>
                 </ul>
               </div>
             )}
@@ -183,45 +195,44 @@ function UserDashboard() {
         </div>
       </nav>
 
-      <main className="dash-main-body">
-        <div className="page-head">
-          <h2>My PG Requests</h2>
-          <button className="btn-primary-add" onClick={() => navigate("/")} style={{ background: '#2563eb' }}>Browse More</button>
+      <main className="dash-main-body" style={{maxWidth: '1100px', margin: '0 auto', padding: '40px 20px'}}>
+        <div className="page-head" style={{display: 'flex', justifyContent: 'space-between', marginBottom: '30px'}}>
+          <h2 style={{fontWeight: '800'}}>My Bookings & Requests</h2>
+          <button className="btn-primary-add" onClick={() => navigate("/")} style={{background: '#2563eb', borderRadius: '8px'}}>+ Find New PG</button>
         </div>
 
-        {loading ? <div className="empty-state">Loading...</div> : (
+        {loading ? <div className="empty-state">Loading your dashboard...</div> : (
           <div className="pg-grid-compact">
-            {/* ADDED FILTER: req.pgId check ensures cards of deleted PGs don't show */}
             {requests.filter(req => req.pgId).map((req) => (
-              <div key={req._id} className="pg-card-compact" style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+              <div key={req._id} className="pg-card-compact shadow-hover" style={{ borderRadius: '15px', overflow: 'hidden' }}>
                 <div className="card-img-container">
                   <img src={req.pgId?.images?.[0]?.url || "/no-image.png"} alt="PG" />
-                  <div className="price-overlay-badge" style={{ background: '#2563eb' }}>₹{req.pgId?.price}/mo</div>
+                  <div className="price-overlay-badge" style={{ background: '#2563eb' }}>₹{req.pgId?.price}</div>
                 </div>
-                <div className="card-body-content">
-                  <h3 className="user-name-bold">{req.pgId?.name}</h3>
-                  <p className="user-email-muted">{req.pgId?.location || "Address not specified"}</p>
+                <div className="card-body-content" style={{padding: '15px'}}>
+                  <h3 className="user-name-bold" style={{fontSize: '16px'}}>{req.pgId?.name}</h3>
+                  <p className="user-email-muted" style={{fontSize: '13px'}}>📍 {req.pgId?.location || "Address Hidden"}</p>
                   
                   <div style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <span style={{ 
-                      padding: '5px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', alignSelf: 'flex-start',
-                      background: req.status === 'approved' ? '#dbeafe' : req.status === 'rejected' ? '#fee2e2' : '#fef9c3',
-                      color: req.status === 'approved' ? '#2563eb' : req.status === 'rejected' ? '#ef4444' : '#854d0e'
+                    <span className={`status-pill ${req.status}`} style={{
+                      padding: '5px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', alignSelf: 'flex-start',
+                      background: req.status === 'approved' ? '#dcfce7' : req.status === 'rejected' ? '#fee2e2' : '#fef9c3',
+                      color: req.status === 'approved' ? '#166534' : req.status === 'rejected' ? '#991b1b' : '#854d0e'
                     }}>
-                      Status: {req.status.toUpperCase()}
+                      {req.status.toUpperCase()}
                     </span>
 
                     {req.status === 'approved' && (
-                      <button onClick={() => fetchReceipt(req._id)} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                      <button onClick={() => fetchReceipt(req._id)} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
                         📄 Download Receipt
                       </button>
                     )}
                   </div>
                   
-                  <div className="split-btns" style={{ marginTop: '20px' }}>
-                    <button className="view-btn" onClick={() => navigate(`/pg/${req.pgId?._id}`)} style={{ borderColor: '#2563eb', color: '#2563eb' }}>Details</button>
+                  <div className="split-btns" style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                    <button className="view-btn" onClick={() => navigate(`/pg/${req.pgId?._id}`)} style={{ flex: 1, border: '1px solid #2563eb', color: '#2563eb', background: 'none' }}>Details</button>
                     {req.status === 'pending' && (
-                      <button className="btn-soft-delete" onClick={() => handleCancel(req._id)} style={{ background: '#ef4444', color: '#fff' }}>Cancel</button>
+                      <button className="btn-soft-delete" onClick={() => handleCancel(req._id)} style={{ flex: 1, background: '#fee2e2', color: '#ef4444' }}>Cancel</button>
                     )}
                   </div>
                 </div>

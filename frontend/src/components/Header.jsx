@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next"; // Added only this
 import "../index.css";
 
 function Header({ search, setSearch, showLoginOptions, setShowLoginOptions }) {
+  const { t } = useTranslation(); // Added only this
   const navigate = useNavigate();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef(null);
@@ -25,7 +27,7 @@ function Header({ search, setSearch, showLoginOptions, setShowLoginOptions }) {
     localStorage.clear();
     setShowProfileDropdown(false);
     navigate("/");
-    window.location.reload(); // Ensures state is cleared across the app
+    window.location.reload(); 
   };
 
   const handleNavigation = (path) => {
@@ -44,7 +46,7 @@ function Header({ search, setSearch, showLoginOptions, setShowLoginOptions }) {
             <input
               type="text"
               className="search-input"
-              placeholder="Search by city or PG name..."
+              placeholder={t("header.search_placeholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -53,7 +55,6 @@ function Header({ search, setSearch, showLoginOptions, setShowLoginOptions }) {
 
           <div className="nav-auth" ref={dropdownRef}>
             {user ? (
-              /* RECTIFIED: Profile Circle with Dropdown */
               <div className="nav-profile-area" style={{ position: 'relative' }}>
                 <div 
                   className="avatar-trigger" 
@@ -77,12 +78,12 @@ function Header({ search, setSearch, showLoginOptions, setShowLoginOptions }) {
                     <div className="dropdown-divider"></div>
                     <ul className="dropdown-list">
                       <li onClick={() => handleNavigation(user.role === "owner" ? "/owner-dashboard" : "/user-dashboard")}>
-                        My Dashboard
+                        {t("header.my_dashboard")}
                       </li>
-                      <li onClick={() => handleNavigation("/")}>Home</li>
+                      <li onClick={() => handleNavigation("/")}>{t("header.home")}</li>
                       <div className="dropdown-divider"></div>
                       <li className="logout-action" onClick={handleLogout}>
-                        Log out
+                        {t("header.logout")}
                       </li>
                     </ul>
                   </div>
@@ -91,10 +92,10 @@ function Header({ search, setSearch, showLoginOptions, setShowLoginOptions }) {
             ) : (
               <>
                 <button className="loginbtn-link" onClick={() => setShowLoginOptions(true)}>
-                  Login
+                  {t("header.login")}
                 </button>
                 <button className="ownerbtn-primary" onClick={() => navigate("/register")} style={{color: 'white', cursor: 'pointer'}}>
-                  Register
+                  {t("header.register")}
                 </button>
               </>
             )}
@@ -102,26 +103,26 @@ function Header({ search, setSearch, showLoginOptions, setShowLoginOptions }) {
         </div>
       </nav>
 
-      {/* Login Modal (Remains exactly as provided) */}
+      {/* Login Modal */}
       {showLoginOptions && (
         <div className="login-modal-overlay">
           <div className="login-box">
             <div className="login-header">
                <h2 className="logo-small">🏠 Roomify</h2>
-               <h3>Welcome Back</h3>
-               <p>How would you like to sign in?</p>
+               <h3>{t("header.welcome_back")}</h3>
+               <p>{t("header.signin_prompt")}</p>
             </div>
            <div className="login-options-container">
               <button className="login-option user" onClick={() => { setShowLoginOptions(false); navigate("/login", { state: { role: 'user' } }); }}>
-                <strong>Login as User</strong>
+                <strong>{t("header.login_user")}</strong>
               </button>
               <button className="login-option owner" onClick={() => { setShowLoginOptions(false); navigate("/login", { state: { role: 'owner' } }); }}>
-                <strong>Login as Owner</strong>
+                <strong>{t("header.login_owner")}</strong>
               </button>
             </div>
             <div className="login-footer">
-               <p>Don't have an account? <span className="register-link" onClick={() => handleNavigation("/register")}> Register</span></p>
-               <button className="close-btn" onClick={() => setShowLoginOptions(false)}>Cancel</button>
+               <p>{t("header.no_account")} <span className="register-link" onClick={() => handleNavigation("/register")}> {t("header.register")}</span></p>
+               <button className="close-btn" onClick={() => setShowLoginOptions(false)}>{t("header.cancel")}</button>
             </div>
           </div>
         </div>

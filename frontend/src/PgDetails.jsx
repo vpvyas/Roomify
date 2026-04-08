@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-// ✅ Added useLocation to the imports
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next"; // Added for i18n
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Rating } from 'react-simple-star-rating'; 
@@ -8,6 +8,7 @@ import "./styles/pgstyle.css";
 
 // --- Sub-Component: Detailed Request Form ---
 const RequestForm = ({ pg, user, onClose, onFinish }) => {
+  const { t } = useTranslation(); // Initialize translation
   const [formData, setFormData] = useState({
     fullName: user?.name || "",
     phone: "",
@@ -43,48 +44,58 @@ const RequestForm = ({ pg, user, onClose, onFinish }) => {
   return (
     <div className="premium-modal-overlay">
       <div className="premium-modal-card">
-        <h2 style={{ marginBottom: '20px', color: '#333', textAlign: 'center' }}>Booking Details</h2>
+        <h2 style={{ marginBottom: '20px', color: '#333', textAlign: 'center' }}>{t("pg.booking_details")}</h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Full Name</label>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t("pg.full_name")}</label>
             <input type="text" value={formData.fullName} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}
               onChange={(e) => setFormData({...formData, fullName: e.target.value})} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Phone</label>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t("pg.phone")}</label>
               <input type="tel" required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})} />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Email</label>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t("pg.email")}</label>
               <input type="email" value={formData.email} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}
                 onChange={(e) => setFormData({...formData, email: e.target.value})} />
             </div>
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Occupation</label>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t("pg.occupation")}</label>
             <input type="text" placeholder="e.g. Student" required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}
               onChange={(e) => setFormData({...formData, occupation: e.target.value})} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Move-in Date</label>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t("pg.move_in_date")}</label>
               <input type="date" required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}
                 onChange={(e) => setFormData({...formData, moveInDate: e.target.value})} />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Duration</label>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t("pg.duration")}</label>
               <input type="text" placeholder="e.g. 6 Months" required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}
                 onChange={(e) => setFormData({...formData, stayDuration: e.target.value})} />
             </div>
           </div>
 
-          <button type="submit" className="btn-primary-blue-large">Send Request</button>
-          <button type="button" onClick={onClose} style={{ padding: '10px', background: '#f1f5f9', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t("pg.message_owner")}</label>
+            <textarea 
+              rows="3" 
+              placeholder="Any special requests or questions?" 
+              style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', resize: 'none' }}
+              onChange={(e) => setFormData({...formData, message: e.target.value})} 
+            />
+          </div>
+
+          <button type="submit" className="btn-primary-blue-large">{t("pg.send_request")}</button>
+          <button type="button" onClick={onClose} style={{ padding: '10px', background: '#f1f5f9', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>{t("pg.cancel")}</button>
         </form>
       </div>
     </div>
@@ -93,9 +104,9 @@ const RequestForm = ({ pg, user, onClose, onFinish }) => {
 
 // --- Main Component ---
 export default function PgDetails() {
+  const { t } = useTranslation(); // Initialize translation
   const { id } = useParams();
   const navigate = useNavigate();
-  // ✅ Initialize location
   const location = useLocation();
 
   const [pg, setPg] = useState(null);
@@ -144,7 +155,6 @@ export default function PgDetails() {
   const nextImage = () => setCurrentImage((prev) => (prev + 1) % images.length);
   const prevImage = () => setCurrentImage((prev) => (prev === 0 ? images.length - 1 : prev - 1));
 
-  // ✅ Updated Review Redirect with Path State
   const handleReview = async (e) => {
     e.preventDefault();
     if (!user || !token) {
@@ -162,7 +172,6 @@ export default function PgDetails() {
     finally { setIsSubmitting(false); }
   };
 
-  // ✅ Updated Reserve Redirect with Path State
   const handleReserveClick = () => {
     if (!user || !token) {
       toast.error("Please login to reserve this PG");
@@ -198,19 +207,19 @@ export default function PgDetails() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div className="host-avatar-blue">{pg.owner?.name?.charAt(0).toUpperCase()}</div>
               <div>
-                <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Hosted by {pg.owner?.name}</h2>
+                <h2 style={{ fontSize: '1.2rem', margin: 0 }}>{t("pg.hosted_by")} {pg.owner?.name}</h2>
                 <p style={{ color: '#666', margin: 0, fontSize: '0.9rem' }}>{pg.owner?.email}</p>
               </div>
             </div>
           </section>
           <hr />
           <section className="info-section">
-            <h3>About this place</h3>
+            <h3>{t("pg.about")}</h3>
             <p className="description-text">{pg.description}</p>
           </section>
           <hr />
           <section className="info-section">
-            <h3>House Rules</h3>
+            <h3>{t("pg.rules")}</h3>
             {pg.rules?.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
                 {pg.rules.map((rule, i) => (
@@ -219,11 +228,11 @@ export default function PgDetails() {
                   </div>
                 ))}
               </div>
-            ) : <p className="description-text">No specific house rules listed.</p>}
+            ) : <p className="description-text">{t("pg.no_rules")}</p>}
           </section>
           <hr />
           <section className="info-section">
-            <h3>Amenities</h3>
+            <h3>{t("pg.amenities")}</h3>
             <div className="amenity-grid">
               {pg.amenities?.map((a, i) => (<div key={i} className="amenity-item"><span className="dot"></span> {a}</div>))}
             </div>
@@ -231,8 +240,8 @@ export default function PgDetails() {
 
           <section className="info-section reviews-section">
             <div className="reviews-header">
-              <h3>Reviews ({pg.reviews?.length || 0})</h3>
-              <div className="avg-pill">★ {pg.reviews?.length > 0 ? (pg.reviews.reduce((a,b)=>a+b.rating,0)/pg.reviews.length).toFixed(1) : "New"}</div>
+              <h3>{t("pg.reviews")} ({pg.reviews?.length || 0})</h3>
+              <div className="avg-pill">★ {pg.reviews?.length > 0 ? (pg.reviews.reduce((a,b)=>a+b.rating,0)/pg.reviews.length).toFixed(1) : t("pg.new")}</div>
             </div>
             <div className="reviews-grid">
               {pg.reviews?.map((rev, i) => (
@@ -244,10 +253,10 @@ export default function PgDetails() {
               ))}
             </div>
             <div className="review-form-card">
-              <h4>Leave a review</h4>
+              <h4>{t("pg.leave_review")}</h4>
               <Rating onClick={setRating} initialValue={rating} size={30} fillColor="#FFD700" transition />
               <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="How was your stay?" />
-              <button onClick={handleReview} disabled={isSubmitting} className="btn-post-review">{isSubmitting ? "Posting..." : "Post Review"}</button>
+              <button onClick={handleReview} disabled={isSubmitting} className="btn-post-review">{isSubmitting ? t("pg.posting") : t("pg.post_review")}</button>
             </div>
           </section>
         </div>
@@ -255,18 +264,20 @@ export default function PgDetails() {
         <div className="pg-sidebar">
           <div className="booking-card-sticky">
             <div className="card-header">
-              <h3>₹{pg.price} <span className="unit">/ month</span></h3>
-              <span className={`status-badge ${pg.availableRooms > 0 ? "available" : "full"}`}>{pg.availableRooms > 0 ? "Available" : "Full"}</span>
+              <h3>₹{pg.price} <span className="unit">{t("pg.per_month")}</span></h3>
+              <span className={`status-badge ${pg.availableRooms > 0 ? "available" : "full"}`}>
+                {pg.availableRooms > 0 ? t("pg.available") : t("pg.full")}
+              </span>
             </div>
             <button className="btn-primary-blue-large" onClick={handleReserveClick} disabled={pg.availableRooms <= 0 || hasRequested}>
-              {hasRequested ? "Request Sent ✅" : "Reserve Now"}
+              {hasRequested ? t("pg.request_sent") : t("pg.reserve_now")}
             </button>
           </div>
         </div>
       </div>
 
       {showForm && <RequestForm pg={pg} user={user} onClose={() => setShowForm(false)} onFinish={() => { setShowForm(false); setHasRequested(true); }} />}
-      <button className="back-btn-blue" onClick={() => navigate(-1)}>← Back</button>
+      <button className="back-btn-blue" onClick={() => navigate(-1)}>← {t("pg.back")}</button>
     </div>
   );
 }

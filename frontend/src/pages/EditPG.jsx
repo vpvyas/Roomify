@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast"; // Using toast for consistency
-import axios from "axios"; // 1. Import axios
+import toast from "react-hot-toast";
+import axios from "axios";
 import "../styles/editPG.css"; 
 
 function EditPG() {
@@ -22,33 +22,39 @@ function EditPG() {
     rules: "",
   });
 
+  const [existingImages, setExistingImages] = useState([]); // ✅ Added to track current photos
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 2. Converted to Axios GET
-    axios.get(`${backendUrl}/pg/${id}`)
-      .then((res) => {
+    const fetchPG = async () => {
+      try {
+        const res = await axios.get(`${backendUrl}/pg/${id}`);
         const data = res.data;
+
+        // ✅ FIXED: Null-safe mapping using ?. to prevent "Does Nothing" crash
         setFormData({
-          name: data.name,
-          description: data.description,
-          city: data.address.city,
-          state: data.address.state,
-          location: data.address.location,
-          price: data.price,
-          availableRooms: data.availableRooms,
-          totalRooms: data.totalRooms,
+          name: data.name || "",
+          description: data.description || "",
+          city: data.address?.city || "",
+          state: data.address?.state || "",
+          location: data.address?.location || "",
+          price: data.price || "",
+          availableRooms: data.availableRooms || "",
+          totalRooms: data.totalRooms || "",
           amenities: Array.isArray(data.amenities) ? data.amenities.join(", ") : "",
           rules: Array.isArray(data.rules) ? data.rules.join(", ") : "",
         });
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching PG:", err);
+
+        setExistingImages(data.images || []); // Store current images for the backend
+      } catch (err) {
+        console.error("Fetch error:", err);
         toast.error("Could not load property data");
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchPG();
   }, [id]);
 
   const handleChange = (e) => {
@@ -63,12 +69,21 @@ function EditPG() {
     e.preventDefault();
     const data = new FormData();
     
-    // Core Data
+    // Core Data (excluding nested/array fields for manual handling)
+    const exclude = ['amenities', 'rules', 'city', 'state', 'location'];
     Object.keys(formData).forEach(key => {
-        if(key !== 'amenities' && key !== 'rules') {
-            data.append(key, formData[key]);
-        }
+      if(!exclude.includes(key)) {
+        data.append(key, formData[key]);
+      }
     });
+
+    // ✅ FIXED: Explicitly send address fields for backend reconstruction
+    data.append("city", formData.city);
+    data.append("state", formData.state);
+    data.append("location", formData.location);
+
+    // ✅ FIXED: Send existing images so backend doesn't delete them
+    data.append("existingImages", JSON.stringify(existingImages));
 
     const amenitiesArray = formData.amenities ? formData.amenities.split(",").map(i => i.trim()) : [];
     const rulesArray = formData.rules ? formData.rules.split(",").map(i => i.trim()) : [];
@@ -77,14 +92,10 @@ function EditPG() {
     data.append("rules", JSON.stringify(rulesArray));
 
     if (selectedFiles.length > 0) {
-      for (let i = 0; i < selectedFiles.length; i++) {
-        data.append("images", selectedFiles[i]);
-      }
+      selectedFiles.forEach(file => data.append("images", file));
     }
 
     try {
-      // 3. Converted to Axios PUT
-      // The interceptor in App.js will now automatically add the Authorization header!
       const response = await axios.put(`${backendUrl}/pg/update/${id}`, data, {
         headers: { "Content-Type": "multipart/form-data" }
       });
@@ -95,8 +106,7 @@ function EditPG() {
       }
     } catch (error) {
       console.error("Submission error:", error);
-      const errorMsg = error.response?.data?.message || "Update failed";
-      toast.error(errorMsg);
+      toast.error(error.response?.data?.message || "Update failed");
     }
   };
 
@@ -107,10 +117,11 @@ function EditPG() {
       <div className="edit-card">
         <header className="edit-header">
           <h1>Edit Your Property</h1>
-          <p>Update your property details to keep listings accurate.</p>
+          <p>Update your details or add new photos below.</p>
         </header>
 
         <form onSubmit={handleSubmit} className="edit-form">
+          {/* Section 1: Basic Info */}
           <section className="form-section">
             <h3><span className="step-num">1</span> Basic Information</h3>
             <div className="input-group">
@@ -123,6 +134,7 @@ function EditPG() {
             </div>
           </section>
 
+          {/* Section 2: Location */}
           <section className="form-section">
             <h3><span className="step-num">2</span> Location Details</h3>
             <div className="form-row">
@@ -141,6 +153,7 @@ function EditPG() {
             </div>
           </section>
 
+          {/* Section 3: Pricing */}
           <section className="form-section">
             <h3><span className="step-num">3</span> Pricing & Capacity</h3>
             <div className="form-row three-col">
@@ -159,23 +172,31 @@ function EditPG() {
             </div>
           </section>
 
+          {/* Section 4: Features */}
           <section className="form-section">
             <h3><span className="step-num">4</span> Features & Rules</h3>
             <div className="input-group">
-              <label>Amenities (Comma separated)</label>
-              <input name="amenities" value={formData.amenities} placeholder="WiFi, AC, Food, Laundry..." onChange={handleChange} />
+              <label>Amenities (WiFi, AC...)</label>
+              <input name="amenities" value={formData.amenities} onChange={handleChange} />
             </div>
             <div className="input-group">
-              <label>House Rules (Comma separated)</label>
-              <input name="rules" value={formData.rules} placeholder="No Smoking, 10 PM Entry..." onChange={handleChange} />
+              <label>House Rules</label>
+              <input name="rules" value={formData.rules} onChange={handleChange} />
             </div>
           </section>
 
+          {/* Section 5: Photos */}
           <section className="form-section media-upload">
             <h3><span className="step-num">5</span> Media Update</h3>
+            
+            {/* Display current photos count */}
+            <p style={{fontSize: '14px', color: '#666'}}>
+              Current photos in gallery: <strong>{existingImages.length}</strong>
+            </p>
+
             <label className="file-label">
               <span className="upload-icon">📷</span>
-              <span>Upload New Photos (Optional)</span>
+              <span>Upload Additional Photos</span>
               <input 
                 type="file" 
                 multiple 
@@ -185,15 +206,15 @@ function EditPG() {
               />
               <small>
                 {selectedFiles.length > 0 
-                  ? `${selectedFiles.length} new files selected` 
-                  : "Supported: JPG, PNG, WEBP. This will replace your current image gallery."
+                  ? `${selectedFiles.length} new files ready to upload` 
+                  : "New photos will be added to your existing gallery."
                 }
               </small>
             </label>
           </section>
 
           <div className="edit-actions">
-            <button type="button" className="cancel-btn" onClick={() => navigate(-1)}>Cancel Changes</button>
+            <button type="button" className="cancel-btn" onClick={() => navigate(-1)}>Cancel</button>
             <button type="submit" className="save-btn">Update Property Now</button>
           </div>
         </form>

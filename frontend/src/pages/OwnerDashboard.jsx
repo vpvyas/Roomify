@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "axios";
@@ -16,7 +16,8 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// --- COMPONENT: Inline Mini Receipt Form ---
+// ─── COMPONENT: Inline Mini Receipt Form ──────────────────────
+// RECTIFIED: Uses flat names (water_charges) and Base64 signature
 const InlineReceiptForm = ({ req, user, onCancel, onSuccess }) => {
   const [formData, setFormData] = useState({
     owner: user.name,
@@ -24,72 +25,73 @@ const InlineReceiptForm = ({ req, user, onCancel, onSuccess }) => {
     requestId: req._id,
     receipt_no: `REC-${Math.floor(1000 + Math.random() * 9000)}`,
     date: new Date().toISOString().split('T')[0],
-    tenant_name: req.formData?.fullName || req.userId?.name,
+    tenant_name: req.formData?.fullName || req.userId?.name || "Tenant",
     property_address: req.pgId?.name || "Roomify PG",
     rent_amount: req.pgId?.price || 0,
-    charges: { water: 0, electricity: 0, tax: 0 },
+    water_charges: 0,       // Matches backend mapper
+    electricity_charges: 0, // Matches backend mapper
+    tax_charges: 0,         // Matches backend mapper
     total_amount: req.pgId?.price || 0,
-    signature: null 
+    signature: ""           // Base64 string
   });
 
   const handleChargeChange = (e) => {
     const { name, value } = e.target;
     const val = parseFloat(value) || 0;
     setFormData(prev => {
-      const updatedCharges = { ...prev.charges, [name]: val };
-      const newTotal = prev.rent_amount + updatedCharges.water + updatedCharges.electricity + updatedCharges.tax;
-      return { ...prev, charges: updatedCharges, total_amount: newTotal };
+      const updated = { ...prev, [name]: val };
+      // RECTIFIED: Explicit math to ensure total reflects instantly
+      const newTotal = Number(updated.rent_amount) + 
+                       Number(updated.water_charges) + 
+                       Number(updated.electricity_charges) + 
+                       Number(updated.tax_charges);
+      return { ...updated, total_amount: newTotal };
     });
   };
 
   const handleSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("File must be less than 2MB");
-        return;
-      }
-      setFormData(prev => ({ ...prev, signature: file }));
+      if (file.size > 2 * 1024 * 1024) return toast.error("File too large (>2MB)");
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, signature: reader.result }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const data = new FormData();
-      Object.keys(formData).forEach((key) => {
-        if (key === "charges") {
-          data.append("charges", JSON.stringify(formData.charges));
-        } else if (key !== "signature") {
-          data.append(key, formData[key]);
-        }
-      });
-      if (formData.signature instanceof File) {
-        data.append("signature", formData.signature);
-      }
-      await axios.post('http://localhost:3000/api/receipts/generate', data, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-      toast.success("Receipt Saved!");
+      // RECTIFIED: Sending standard JSON object
+      await axios.post('http://localhost:3000/api/receipts/generate', formData);
+      toast.success("Receipt Saved & Generated!");
       onSuccess();
-    } catch (err) { toast.error("Failed to save receipt"); }
+    } catch (err) { 
+      console.error("API Error:", err.response?.data);
+      toast.error(err.response?.data?.message || "Failed to save receipt"); 
+    }
   };
 
   return (
-    <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0', marginTop: '10px' }}>
+    <div className="receipt-form-box" style={{ background: '#f0fdf4', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0', marginTop: '10px' }}>
       <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#166534' }}>Generate Rent Receipt</h4>
       <form onSubmit={handleSave} style={{ display: 'grid', gap: '8px' }}>
         <div style={{ display: 'flex', gap: '5px' }}>
-          <input type="number" placeholder="Water ₹" name="water" onChange={handleChargeChange} style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #ccc', borderRadius: '4px' }} />
-          <input type="number" placeholder="Elec ₹" name="electricity" onChange={handleChargeChange} style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #ccc', borderRadius: '4px' }} />
-          <input type="number" placeholder="Tax ₹" name="tax" onChange={handleChargeChange} style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #ccc', borderRadius: '4px' }} />
+          <input type="number" placeholder="Water ₹" name="water_charges" onChange={handleChargeChange} style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #ccc', borderRadius: '4px' }} />
+          <input type="number" placeholder="Elec ₹" name="electricity_charges" onChange={handleChargeChange} style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #ccc', borderRadius: '4px' }} />
+          <input type="number" placeholder="Tax ₹" name="tax_charges" onChange={handleChargeChange} style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #ccc', borderRadius: '4px' }} />
         </div>
-        <input type="file" accept="image/*" onChange={handleSignatureUpload} style={{ fontSize: '11px' }} />
+        <div style={{ background: '#fff', padding: '5px', borderRadius: '4px', border: '1px dashed #ccc' }}>
+          <label style={{ fontSize: '10px', display: 'block', marginBottom: '2px' }}>Upload Owner Signature:</label>
+          <input type="file" accept="image/*" onChange={handleSignatureUpload} style={{ fontSize: '10px', width: '100%' }} />
+        </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', color: '#166534', fontSize: '14px' }}>
           <span>Total: ₹{formData.total_amount}</span>
           <div style={{ display: 'flex', gap: '5px' }}>
-            <button type="submit" style={{ background: '#166534', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Save</button>
-            <button type="button" onClick={onCancel} style={{ background: '#666', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Cancel</button>
+            <button type="submit" style={{ background: '#166534', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Save</button>
+            <button type="button" onClick={onCancel} style={{ background: '#666', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Cancel</button>
           </div>
         </div>
       </form>
@@ -97,26 +99,33 @@ const InlineReceiptForm = ({ req, user, onCancel, onSuccess }) => {
   );
 };
 
-// --- COMPONENT: ViewDetailsModal ---
+// ─── COMPONENT: ViewDetailsModal ───────────────────────────
+// RECTIFIED: Displays the hidden message field
 const ViewDetailsModal = ({ request, onClose }) => {
   if (!request || !request.formData) return null;
   const data = request.formData;
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
-      <div style={{ background: '#fff', padding: '25px', borderRadius: '12px', width: '90%', maxWidth: '450px' }}>
-        <h3 style={{ borderBottom: '2px solid #eee', paddingBottom: '10px' }}>Request Details</h3>
-        <p><strong>Name:</strong> {data.fullName}</p>
-        <p><strong>Phone:</strong> {data.phone}</p>
-        <p><strong>Move-in:</strong> {new Date(data.moveInDate).toLocaleDateString()}</p>
-        <div style={{ background: '#f9f9f9', padding: '10px', marginTop: '10px' }}>
-            <strong>Message:</strong> "{data.message || "No message"}"
+      <div style={{ background: '#fff', padding: '25px', borderRadius: '12px', width: '90%', maxWidth: '450px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
+        <h3 style={{ borderBottom: '2px solid #eee', paddingBottom: '10px', color: '#2563eb' }}>Booking Request Details</h3>
+        <div style={{ marginTop: '15px', lineHeight: '1.6' }}>
+          <p><strong>Name:</strong> {data.fullName}</p>
+          <p><strong>Phone:</strong> {data.phone}</p>
+          <p><strong>Email:</strong> {data.email}</p>
+          <p><strong>Move-in:</strong> {new Date(data.moveInDate).toLocaleDateString()}</p>
+          <p><strong>Duration:</strong> {data.stayDuration}</p>
+          <div style={{ background: '#f8fafc', padding: '12px', marginTop: '10px', borderRadius: '8px', borderLeft: '4px solid #2563eb' }}>
+              <strong>Message to Owner:</strong> 
+              <p style={{ margin: '5px 0 0 0', fontStyle: 'italic', color: '#444' }}>"{data.message || "No special message provided."}"</p>
+          </div>
         </div>
-        <button onClick={onClose} style={{ marginTop: '20px', width: '100%', padding: '10px', background: '#333', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Close</button>
+        <button onClick={onClose} style={{ marginTop: '20px', width: '100%', padding: '12px', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Close</button>
       </div>
     </div>
   );
 };
 
+// ─── MAIN COMPONENT: OwnerDashboard ─────────────────────────
 function OwnerDashboard() {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -125,6 +134,7 @@ function OwnerDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [activeReceiptId, setActiveReceiptId] = useState(null); 
+  const dropdownRef = useRef(null);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -133,10 +143,11 @@ function OwnerDashboard() {
     setLoading(true);
     const ownerId = user.id || user._id;
     try {
-      const reqRes = await axios.get(`http://localhost:3000/api/requests/owner/${ownerId}`);
+      const [reqRes, pgRes] = await Promise.all([
+        axios.get(`http://localhost:3000/api/requests/owner/${ownerId}`),
+        axios.get(`http://localhost:3000/pg/owner/${ownerId}`)
+      ]);
       setRequests(reqRes.data);
-      // Notice: No "/api" here.
-      const pgRes = await axios.get(`http://localhost:3000/pg/owner/${ownerId}`); 
       setMyPgs(pgRes.data);
     } catch (err) {
       if (err.response?.status === 401) navigate("/login");
@@ -146,6 +157,12 @@ function OwnerDashboard() {
   useEffect(() => {
     if (!user || user.role !== 'owner') { navigate("/login"); return; }
     fetchData();
+
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setShowDropdown(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleStatusUpdate = async (requestId, newStatus) => {
@@ -161,35 +178,29 @@ function OwnerDashboard() {
     try {
       await axios.delete(`http://localhost:3000/api/requests/${requestId}`);
       setRequests(prev => prev.filter(req => req._id !== requestId));
-      toast.success("Request Deleted");
+      toast.success("Deleted");
     } catch (err) { toast.error("Delete failed."); }
   };
 
-  // ✅ RECTIFIED: CASCADE DELETE LOGIC
   const handleDeletePg = async (id) => {
-    if (!window.confirm("Delete listing and Cloudinary images permanently?")) return;
+    if (!window.confirm("Delete listing permanently?")) return;
     try {
-      // Adjusted URL to match your backend PG route pattern (removing /api)
       await axios.delete(`http://localhost:3000/pg/${id}`); 
-      
       setMyPgs(prev => prev.filter(pg => pg._id !== id));
-      setRequests(prev => prev.filter(req => req.pgId?._id !== id && req.pgId !== id));
+      setRequests(prev => prev.filter(req => req.pgId?._id !== id));
       toast.success("Deleted!");
-    } catch (err) {
-      console.error("DELETE ERROR:", err.response?.data || err.message);
-      toast.error(err.response?.data?.message || "Failed to delete property");
-    }
+    } catch (err) { toast.error("Delete failed."); }
   };
 
   const handleLogout = () => { localStorage.clear(); navigate("/"); };
 
   return (
     <div className="dashboard-wrapper">
-      <nav className="dash-nav">
+      <nav className="dash-nav" style={{ sticky: 'top', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #eee' }}>
         <div className="nav-inner">
-          <div className="logo-text" onClick={() => navigate("/")} style={{cursor: 'pointer'}}>Roomify</div>
-          <div className="nav-profile-area">
-            <div className="avatar-trigger" onClick={() => setShowDropdown(!showDropdown)}>
+          <div className="logo-text" onClick={() => navigate("/")} style={{cursor: 'pointer', color: '#2563eb', fontWeight: 'bold', fontSize: '22px'}}>Roomify</div>
+          <div className="nav-profile-area" ref={dropdownRef}>
+            <div className="avatar-trigger" onClick={() => setShowDropdown(!showDropdown)} style={{ background: '#2563eb' }}>
               {user.name.charAt(0).toUpperCase()}
             </div>
             {showDropdown && (
@@ -215,7 +226,7 @@ function OwnerDashboard() {
           {loading ? (
             <div className="empty-state">Loading...</div>
           ) : requests.length === 0 ? (
-            <div className="empty-state">No requests.</div>
+            <div className="empty-state">No requests found.</div>
           ) : (
             <div className="pg-grid-compact">
               {requests.map((req) => (
@@ -225,9 +236,9 @@ function OwnerDashboard() {
                     <div className="price-overlay-badge">₹{req.pgId?.price}</div>
                   </div>
                   <div className="card-body-content">
-                    <h3 className="user-name-bold">{req.pgId?.name}</h3>
+                    <h3 className="user-name-bold">{req.pgId?.name || "Deleted Property"}</h3>
                     <p className="user-email-muted">Requester: {req.userId?.name}</p>
-                    <button onClick={() => setSelectedRequest(req)} style={{ color: '#007bff', background: 'none', border: 'none', textDecoration: 'underline', fontSize: '12px', cursor: 'pointer' }}>View Details</button>
+                    <button onClick={() => setSelectedRequest(req)} style={{ color: '#2563eb', background: 'none', border: 'none', textDecoration: 'underline', fontSize: '12px', cursor: 'pointer', padding: 0 }}>View Full Details</button>
                     <div style={{ marginTop: '10px' }}>
                       <span className={`status-pill ${req.status}`}>{req.status.toUpperCase()}</span>
                     </div>
@@ -243,12 +254,12 @@ function OwnerDashboard() {
                           </>
                         ) : req.status === 'rejected' ? (
                           <button className="btn-soft-delete" style={{ width: '100%', background: '#ff4d4d', color: '#fff' }} onClick={() => handleDeleteRequest(req._id)}>
-                            Delete Card
+                            Remove Card
                           </button>
                         ) : (
                           <>
-                            <button className="view-btn" onClick={() => setActiveReceiptId(req._id)} style={{ background: '#2e7d32', color: '#fff' }}>Receipt</button>
-                            <button className="view-btn" onClick={() => navigate(`/pg/${req.pgId?._id}`)}>View PG</button>
+                            <button className="view-btn" onClick={() => setActiveReceiptId(req._id)} style={{ background: '#2e7d32', color: '#fff' }}>Generate Receipt</button>
+                            <button className="view-btn" onClick={() => navigate(`/pg/${req.pgId?._id}`)}>View Listing</button>
                           </>
                         )}
                       </div>
