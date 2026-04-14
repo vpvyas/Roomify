@@ -122,24 +122,39 @@ function UserDashboard() {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [requests, setRequests] = useState([]);
+  const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [activeTab, setActiveTab] = useState('bookings'); // 'bookings' or 'favorites'
 
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
   useEffect(() => {
     if (!user) return navigate("/login");
-    const fetchRequests = async () => {
+    
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/api/requests/user/${user.id || user._id}`, {
+        // Fetch requests/bookings
+        const requestsResponse = await axios.get(`http://localhost:3000/api/requests/user/${user.id || user._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setRequests(response.data);
-      } catch (err) { console.error(err); } finally { setLoading(false); }
+        setRequests(requestsResponse.data);
+
+        // Fetch favorites
+        const favResponse = await axios.get(`http://localhost:3000/api/users/${user.id || user._id}/favorites`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setFavorites(favResponse.data.favorites);
+      } catch (err) { 
+        console.error(err); 
+      } finally { 
+        setLoading(false); 
+      }
     };
-    fetchRequests();
-  }, [navigate]);
+    
+    fetchData();
+  }, [navigate, user, token]);
 
   const fetchReceipt = async (requestId) => {
     try {
@@ -162,6 +177,18 @@ function UserDashboard() {
       setRequests(prev => prev.filter(r => r._id !== id));
       toast.success("Cancelled successfully");
     } catch (err) { toast.error("Failed to cancel"); }
+  };
+
+  const removeFavorite = async (pgId) => {
+    try {
+      await axios.delete(`http://localhost:3000/api/users/${user.id || user._id}/favorites/${pgId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFavorites(prev => prev.filter(fav => fav._id !== pgId));
+      toast.success("Removed from favorites");
+    } catch (err) { 
+      toast.error("Failed to remove from favorites"); 
+    }
   };
 
   if (!user) return null;
@@ -196,49 +223,135 @@ function UserDashboard() {
       </nav>
 
       <main className="dash-main-body" style={{maxWidth: '1100px', margin: '0 auto', padding: '40px 20px'}}>
-        <div className="page-head" style={{display: 'flex', justifyContent: 'space-between', marginBottom: '30px'}}>
-          <h2 style={{fontWeight: '800'}}>My Bookings & Requests</h2>
+        <div className="page-head" style={{display: 'flex', justifyContent: 'space-between', marginBottom: '30px', alignItems: 'center'}}>
+          <h2 style={{fontWeight: '800', margin: 0}}>My Dashboard</h2>
           <button className="btn-primary-add" onClick={() => navigate("/")} style={{background: '#2563eb', borderRadius: '8px'}}>+ Find New PG</button>
         </div>
 
-        {loading ? <div className="empty-state">Loading your dashboard...</div> : (
-          <div className="pg-grid-compact">
-            {requests.filter(req => req.pgId).map((req) => (
-              <div key={req._id} className="pg-card-compact shadow-hover" style={{ borderRadius: '15px', overflow: 'hidden' }}>
-                <div className="card-img-container">
-                  <img src={req.pgId?.images?.[0]?.url || "/no-image.png"} alt="PG" />
-                  <div className="price-overlay-badge" style={{ background: '#2563eb' }}>₹{req.pgId?.price}</div>
-                </div>
-                <div className="card-body-content" style={{padding: '15px'}}>
-                  <h3 className="user-name-bold" style={{fontSize: '16px'}}>{req.pgId?.name}</h3>
-                  <p className="user-email-muted" style={{fontSize: '13px'}}>📍 {req.pgId?.location || "Address Hidden"}</p>
-                  
-                  <div style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <span className={`status-pill ${req.status}`} style={{
-                      padding: '5px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', alignSelf: 'flex-start',
-                      background: req.status === 'approved' ? '#dcfce7' : req.status === 'rejected' ? '#fee2e2' : '#fef9c3',
-                      color: req.status === 'approved' ? '#166534' : req.status === 'rejected' ? '#991b1b' : '#854d0e'
-                    }}>
-                      {req.status.toUpperCase()}
-                    </span>
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '2px solid #f1f5f9' }}>
+          <button 
+            onClick={() => setActiveTab('bookings')}
+            style={{
+              padding: '12px 20px',
+              background: activeTab === 'bookings' ? '#2563eb' : 'transparent',
+              color: activeTab === 'bookings' ? 'white' : '#2563eb',
+              border: 'none',
+              borderRadius: '8px 8px 0 0',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              borderBottom: activeTab === 'bookings' ? '3px solid #2563eb' : 'none',
+              transition: 'all 0.2s'
+            }}
+          >
+            📋 My Bookings ({requests.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('favorites')}
+            style={{
+              padding: '12px 20px',
+              background: activeTab === 'favorites' ? '#2563eb' : 'transparent',
+              color: activeTab === 'favorites' ? 'white' : '#2563eb',
+              border: 'none',
+              borderRadius: '8px 8px 0 0',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              borderBottom: activeTab === 'favorites' ? '3px solid #2563eb' : 'none',
+              transition: 'all 0.2s'
+            }}
+          >
+            ♥ Favorites ({favorites.length})
+          </button>
+        </div>
 
-                    {req.status === 'approved' && (
-                      <button onClick={() => fetchReceipt(req._id)} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                        📄 Download Receipt
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="split-btns" style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                    <button className="view-btn" onClick={() => navigate(`/pg/${req.pgId?._id}`)} style={{ flex: 1, border: '1px solid #2563eb', color: '#2563eb', background: 'none' }}>Details</button>
-                    {req.status === 'pending' && (
-                      <button className="btn-soft-delete" onClick={() => handleCancel(req._id)} style={{ flex: 1, background: '#fee2e2', color: '#ef4444' }}>Cancel</button>
-                    )}
-                  </div>
-                </div>
+        {/* Bookings Tab */}
+        {activeTab === 'bookings' && (
+          loading ? <div className="empty-state">Loading your bookings...</div> : (
+            requests.length === 0 ? (
+              <div className="empty-state" style={{ textAlign: 'center', padding: '60px 20px' }}>
+                <p style={{ fontSize: '1.2rem', color: '#64748b' }}>No bookings yet. Start exploring!</p>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="pg-grid-compact">
+                {requests.filter(req => req.pgId).map((req) => (
+                  <div key={req._id} className="pg-card-compact shadow-hover" style={{ borderRadius: '15px', overflow: 'hidden' }}>
+                    <div className="card-img-container">
+                      <img src={req.pgId?.images?.[0]?.url || "/no-image.png"} alt="PG" />
+                      <div className="price-overlay-badge" style={{ background: '#2563eb' }}>₹{req.pgId?.price}</div>
+                    </div>
+                    <div className="card-body-content" style={{padding: '15px'}}>
+                      <h3 className="user-name-bold" style={{fontSize: '16px'}}>{req.pgId?.name}</h3>
+                      <p className="user-email-muted" style={{fontSize: '13px'}}>📍 {req.pgId?.location || "Address Hidden"}</p>
+                      
+                      <div style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <span className={`status-pill ${req.status}`} style={{
+                          padding: '5px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', alignSelf: 'flex-start',
+                          background: req.status === 'approved' ? '#dcfce7' : req.status === 'rejected' ? '#fee2e2' : '#fef9c3',
+                          color: req.status === 'approved' ? '#166534' : req.status === 'rejected' ? '#991b1b' : '#854d0e'
+                        }}>
+                          {req.status.toUpperCase()}
+                        </span>
+
+                        {req.status === 'approved' && (
+                          <button onClick={() => fetchReceipt(req._id)} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                            📄 Download Receipt
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="split-btns" style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                        <button className="view-btn" onClick={() => navigate(`/pg/${req.pgId?._id}`)} style={{ flex: 1, border: '1px solid #2563eb', color: '#2563eb', background: 'none' }}>Details</button>
+                        {req.status === 'pending' && (
+                          <button className="btn-soft-delete" onClick={() => handleCancel(req._id)} style={{ flex: 1, background: '#fee2e2', color: '#ef4444' }}>Cancel</button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          )
+        )}
+
+        {/* Favorites Tab */}
+        {activeTab === 'favorites' && (
+          loading ? <div className="empty-state">Loading your favorites...</div> : (
+            favorites.length === 0 ? (
+              <div className="empty-state" style={{ textAlign: 'center', padding: '60px 20px' }}>
+                <p style={{ fontSize: '1.2rem', color: '#64748b' }}>No favorites yet. Add some PGs to your favorites!</p>
+              </div>
+            ) : (
+              <div className="pg-grid-compact">
+                {favorites.map((pg) => (
+                  <div key={pg._id} className="pg-card-compact shadow-hover" style={{ borderRadius: '15px', overflow: 'hidden' }}>
+                    <div className="card-img-container">
+                      <img src={pg?.images?.[0]?.url || "/no-image.png"} alt="PG" />
+                      <div className="price-overlay-badge" style={{ background: '#2563eb' }}>₹{pg?.price}</div>
+                    </div>
+                    <div className="card-body-content" style={{padding: '15px'}}>
+                      <h3 className="user-name-bold" style={{fontSize: '16px'}}>{pg?.name}</h3>
+                      <p className="user-email-muted" style={{fontSize: '13px'}}>📍 {pg?.address?.city || "City"}</p>
+                      
+                      <div style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <span style={{
+                          padding: '5px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', alignSelf: 'flex-start',
+                          background: '#fef9c3',
+                          color: '#854d0e'
+                        }}>
+                          ♥ FAVORITE
+                        </span>
+                      </div>
+                      
+                      <div className="split-btns" style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                        <button className="view-btn" onClick={() => navigate(`/pg/${pg?._id}`)} style={{ flex: 1, border: '1px solid #2563eb', color: '#2563eb', background: 'none' }}>View</button>
+                        <button className="btn-soft-delete" onClick={() => removeFavorite(pg?._id)} style={{ flex: 1, background: '#fee2e2', color: '#ef4444' }}>Remove</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          )
         )}
       </main>
 

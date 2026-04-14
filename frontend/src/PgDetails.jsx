@@ -117,6 +117,7 @@ export default function PgDetails() {
   const [rating, setRating] = useState(0);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const BACKEND_URL = "http://localhost:3000";
   const token = localStorage.getItem("token");
@@ -139,6 +140,13 @@ export default function PgDetails() {
             headers: { Authorization: `Bearer ${token}` }
           });
           setHasRequested(res.data.some(req => req.pgId?._id === id || req.pgId === id));
+
+          // Check if this PG is in favorites
+          const favRes = await axios.get(`${BACKEND_URL}/api/users/${user.id || user._id}/favorites`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const isFav = favRes.data.favorites.some(fav => fav._id === id);
+          setIsFavorite(isFav);
         } catch (err) { console.error("Status check failed", err); }
       }
     };
@@ -179,6 +187,35 @@ export default function PgDetails() {
       return;
     }
     setShowForm(true);
+  };
+
+  const toggleFavorite = async () => {
+    if (!user || !token) {
+      toast.error("Please login to add to favorites");
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        await axios.delete(`${BACKEND_URL}/api/users/${user.id || user._id}/favorites/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setIsFavorite(false);
+        toast.success("Removed from favorites");
+      } else {
+        // Add to favorites
+        await axios.post(`${BACKEND_URL}/api/users/${user.id || user._id}/favorites/${id}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setIsFavorite(true);
+        toast.success("Added to favorites");
+      }
+    } catch (err) {
+      toast.error("Error updating favorites");
+      console.error("Error toggling favorite:", err);
+    }
   };
 
   return (
@@ -271,6 +308,13 @@ export default function PgDetails() {
             </div>
             <button className="btn-primary-blue-large" onClick={handleReserveClick} disabled={pg.availableRooms <= 0 || hasRequested}>
               {hasRequested ? t("pg.request_sent") : t("pg.reserve_now")}
+            </button>
+            <button 
+              className={`favorite-btn-detail ${isFavorite ? 'active' : ''}`}
+              onClick={toggleFavorite}
+              title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              ♥ {isFavorite ? "In Favorites" : "Add to Favorites"}
             </button>
           </div>
         </div>

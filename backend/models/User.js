@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'owner'], 
     default: 'user' // Default to tenant, updated to 'host' if they register as owner
   },
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'PG' }],
   createdAt: { type: Date, default: Date.now }
 });
 
